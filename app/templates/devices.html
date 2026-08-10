@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Devices — Chkt{% endblock %}
+{% block content %}
+<h1>Devices</h1>
+
+<section class="panel" style="max-width:42rem">
+  <h2>Connect a device</h2>
+  <p class="hint">Each phone or tablet running the Chkt app gets its own access key. In the app: Settings → Sync, paste the server address and this key.</p>
+
+  {% if fresh_key %}
+  <p class="msg ok">✓ Key created. Copy it now — it's shown only this once:</p>
+  <p><code style="user-select:all;word-break:break-all">{{ fresh_key }}</code></p>
+  {% endif %}
+
+  <form method="post" class="row">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <div>
+      <label for="d-label">Device name</label>
+      <input id="d-label" name="label" placeholder="Charlie's phone">
+    </div>
+    <button class="btn-primary" type="submit">Create access key</button>
+  </form>
+</section>
+
+<section class="panel" style="max-width:42rem">
+  <h2>Connected devices</h2>
+  {% if keys %}
+  <table>
+    <caption>Access keys that can sync with this server</caption>
+    <tr><th>Device</th><th>Created</th><th>Last sync</th><th></th></tr>
+    {% for k in keys %}
+    <tr>
+      <td>{{ k.label }}</td>
+      <td>{{ (k.created_at // 1000) | datetimeformat }}</td>
+      <td>{{ ((k.last_used_at // 1000) | datetimeformat) if k.last_used_at else 'never' }}</td>
+      <td>
+        <form method="post">
+          <input type="hidden" name="csrf" value="{{ csrf }}">
+          <input type="hidden" name="revoke" value="{{ k.id }}">
+          <button class="icon-btn" type="submit" data-confirm
+                  aria-label="Revoke key for {{ k.label }}"
+                  title="Revoke — that device stops syncing. Click again to confirm.">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M5 7h14M9 7V4h6v3M7 7l1 13h8l1-13"/>
+            </svg>
+          </button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p class="hint">No devices connected yet.</p>
+  {% endif %}
+</section>
+{% endblock %}

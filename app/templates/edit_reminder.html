@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit reminder' if reminder else 'New reminder' }} — Chkt{% endblock %}
+{% block content %}
+<h1>{{ 'Edit reminder' if reminder else 'New reminder' }}</h1>
+
+<form method="post" class="panel" style="max-width:42rem">
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+
+  <label for="f-title">What to remind you about</label>
+  <input id="f-title" name="title" required value="{{ reminder.title if reminder else '' }}">
+
+  <label for="f-notes">Notes (also spoken)</label>
+  <textarea id="f-notes" name="notes">{{ reminder.notes if reminder else '' }}</textarea>
+
+  <label for="f-list">List</label>
+  <select id="f-list" name="list_id">
+    {% for l in lists %}
+    <option value="{{ l.id }}"
+      {% if (reminder and reminder.list_id == l.id) or (not reminder and preset_list == l.id) %}selected{% endif %}>
+      {{ l.name }}</option>
+    {% endfor %}
+  </select>
+
+  <label for="f-due">When</label>
+  <input id="f-due" type="datetime-local" name="due" value="{{ due_local }}">
+  <p class="hint">Leave empty for a location-only reminder.</p>
+
+  <fieldset>
+    <label for="f-repeat">Repeat</label>
+    <select id="f-repeat" name="repeat_kind" data-repeat-select>
+      {% set rule = reminder.repeat_rule if reminder else '' %}
+      <option value="NONE" {% if not rule %}selected{% endif %}>Once</option>
+      <option value="DAILY" {% if rule == 'DAILY' %}selected{% endif %}>Daily</option>
+      <option value="WEEKLY" {% if rule.startswith('WEEKLY') %}selected{% endif %}>Weekly</option>
+      <option value="MONTHLY" {% if rule.startswith('MONTHLY') %}selected{% endif %}>Monthly</option>
+      <option value="YEARLY" {% if rule.startswith('YEARLY') %}selected{% endif %}>Yearly</option>
+      <option value="EVERY" {% if rule.startswith('EVERY') %}selected{% endif %}>Custom interval</option>
+    </select>
+
+    <div data-repeat-panel="WEEKLY" hidden>
+      <label>Days of the week</label>
+      <div class="row" role="group" aria-label="Days of the week">
+        {% for d in ['MON','TUE','WED','THU','FRI','SAT','SUN'] %}
+        <label style="display:flex;gap:0.4rem;align-items:center;font-weight:400;min-width:auto">
+          <input style="width:auto" type="checkbox" name="weekday" value="{{ d }}"
+            {% if rule.startswith('WEEKLY') and d in rule %}checked{% endif %}>
+          {{ d.title() }}
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div data-repeat-panel="MONTHLY" hidden>
+      <label for="f-monthday">Day of month (1–31, or LAST)</label>
+      <input id="f-monthday" name="monthday"
+             value="{{ rule[8:] if rule.startswith('MONTHLY') else '' }}">
+    </div>
+
+    <div data-repeat-panel="EVERY" hidden>
+      <div class="row">
+        <div>
+          <label for="f-every-n">Every</label>
+          <input id="f-every-n" name="every_n" inputmode="numeric"
+                 value="{{ rule[6:-1] if rule.startswith('EVERY') else '2' }}">
+        </div>
+        <div>
+          <label for="f-every-unit">Unit</label>
+          <select id="f-every-unit" name="every_unit">
+            {% set unit = rule[-1] if rule.startswith('EVERY') else 'd' %}
+            <option value="m" {% if unit == 'm' %}selected{% endif %}>minutes</option>
+            <option value="h" {% if unit == 'h' %}selected{% endif %}>hours</option>
+            <option value="d" {% if unit == 'd' %}selected{% endif %}>days</option>
+            <option value="w" {% if unit == 'w' %}selected{% endif %}>weeks</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </fieldset>
+
+  <label for="f-alert">Alert</label>
+  <select id="f-alert" name="alert_mode">
+    {% for value, label in alert_modes %}
+    <option value="{{ value }}" {% if reminder and reminder.alert_mode == value %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+  <label style="display:flex;gap:0.5rem;align-items:center;font-weight:400">
+    <input style="width:auto" type="checkbox" name="pre_tone" {% if reminder and reminder.pre_tone %}checked{% endif %}>
+    Play a tone before speaking
+  </label>
+
+  <label for="f-loc">Location</label>
+  <select id="f-loc" name="location_trigger" data-loc-select>
+    {% set trig = reminder.location_trigger if reminder else 'NONE' %}
+    <option value="NONE" {% if trig == 'NONE' %}selected{% endif %}>Off</option>
+    <option value="ARRIVE" {% if trig == 'ARRIVE' %}selected{% endif %}>When I arrive</option>
+    <option value="LEAVE" {% if trig == 'LEAVE' %}selected{% endif %}>When I leave</option>
+  </select>
+  <div data-loc-panel hidden>
+    <div class="row">
+      <div>
+        <label for="f-lat">Latitude</label>
+        <input id="f-lat" name="latitude" inputmode="decimal" value="{{ reminder.latitude if reminder and reminder.latitude is not none else '' }}">
+      </div>
+      <div>
+        <label for="f-lon">Longitude</label>
+        <input id="f-lon" name="longitude" inputmode="decimal" value="{{ reminder.longitude if reminder and reminder.longitude is not none else '' }}">
+      </div>
+      <div>
+        <label for="f-radius">Radius (m)</label>
+        <input id="f-radius" name="radius" inputmode="numeric" value="{{ reminder.radius_metres|int if reminder else 150 }}">
+      </div>
+    </div>
+    <p class="hint">Location alerts fire on the phone, which is the thing that travels — set the place here and the app picks it up on the next sync. <button class="btn-quiet" type="button" data-use-location>Use my location now</button></p>
+  </div>
+
+  <p style="margin-bottom:0;margin-top:1.25rem">
+    <button class="btn-primary" type="submit">Save reminder</button>
+    <a class="btn" href="{{ url_for('views.home') }}">Cancel</a>
+  </p>
+</form>
+{% endblock %}

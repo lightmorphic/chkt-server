@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Chkt{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}">
+  <link rel="icon" href="{{ url_for('static', filename='icon.svg') }}" type="image/svg+xml">
+  <meta name="theme-color" content="#1B5E4A">
+</head>
+<body data-csrf="{{ csrf if csrf is defined else '' }}">
+<header class="top">
+  <a class="logo" href="{{ url_for('views.home') }}">
+    <svg width="28" height="28" viewBox="0 0 48 48" aria-hidden="true">
+      <rect x="2" y="2" width="44" height="44" rx="10" fill="#1B5E4A"/>
+      <path d="M14 25 L21 32 L34 16" stroke="#fff" stroke-width="5" fill="none"
+            stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Chkt
+  </a>
+  <nav aria-label="Main">
+    <a href="{{ url_for('views.home') }}" {% if request.endpoint == 'views.home' %}aria-current="page"{% endif %}>Reminders</a>
+    <a href="{{ url_for('views.stats') }}" {% if request.endpoint == 'views.stats' %}aria-current="page"{% endif %}>Stats</a>
+    <a href="{{ url_for('views.devices') }}" {% if request.endpoint == 'views.devices' %}aria-current="page"{% endif %}>Devices</a>
+    <a href="{{ url_for('views.settings_page') }}" {% if request.endpoint == 'views.settings_page' %}aria-current="page"{% endif %}>Settings</a>
+    <form method="post" action="{{ url_for('auth.logout') }}">
+      <button class="btn-quiet" type="submit">Log out</button>
+    </form>
+  </nav>
+</header>
+<main>
+  {% block content %}{% endblock %}
+</main>
+
+<div id="alert-overlay" role="alertdialog" aria-modal="true" aria-labelledby="alert-title">
+  <div class="panel">
+    <p class="hint">Reminder</p>
+    <p class="alert-title" id="alert-title"></p>
+    <p id="alert-notes" class="hint"></p>
+    <button class="btn-primary" id="alert-done" type="button">Done</button>
+    <div class="snoozes" id="alert-snoozes"></div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+services:
+  chkt:
+    build: .
+    container_name: chkt
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8321:8321"
+    environment:
+      # The one and only secret. Set it once in .env next to this file:
+      #   SECRET_KEY=<output of: python3 -c "import secrets; print(secrets.token_urlsafe(48))">
+      - SECRET_KEY=${SECRET_KEY}
+    volumes:
+      - ./data:/data
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8321/healthz', timeout=5)"]
+      interval: 60s
+      timeout: 10s
+      retries: 3

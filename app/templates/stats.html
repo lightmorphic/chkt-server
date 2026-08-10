@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Stats — Chkt{% endblock %}
+{% block content %}
+<h1>Last 30 days</h1>
+
+<section class="panel">
+  <div class="stat-grid">
+    <div class="stat">
+      <div class="value">{{ stats.done }}</div>
+      <div class="label">Completed</div>
+    </div>
+    <div class="stat">
+      <div class="value">{{ stats.missed }}</div>
+      <div class="label">Missed</div>
+    </div>
+    <div class="stat">
+      <div class="value">{{ stats.snoozed }}</div>
+      <div class="label">Snoozed</div>
+    </div>
+    <div class="stat">
+      <div class="value">{{ stats.rate ~ '%' if stats.rate is not none else '—' }}</div>
+      <div class="label">Completion rate</div>
+    </div>
+  </div>
+  <p class="hint" style="margin-top:1rem">Counted from what you tap: Done counts as completed, a dismissed alert counts as missed. Actions on your phone arrive with each sync.</p>
+</section>
+{% endblock %}
