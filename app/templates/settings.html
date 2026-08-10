@@ -3,6 +3,11 @@
 {% block content %}
 <h1>Settings</h1>
 {% if message %}<p class="msg ok">✓ {{ message }}</p>{% endif %}
+{% if update_available %}
+<p class="msg ok">✓ Chkt Server {{ update_available }} is available (you're on {{ server_version }}).
+Update from the server folder with: <code>git pull && docker compose up -d --build</code>,
+or rerun <code>deploy.sh</code>. Your data is untouched either way.</p>
+{% endif %}
 
 <div class="list-grid">
   <section class="panel">
@@ -44,7 +49,7 @@
       <input type="hidden" name="csrf" value="{{ csrf }}">
       <input type="hidden" name="section" value="github">
       <label for="s-repo">Repository (owner/name)</label>
-      <input id="s-repo" name="github_repo" value="{{ values.github_repo }}" placeholder="FOSSCharlie/chkt-data">
+      <input id="s-repo" name="github_repo" value="{{ values.github_repo }}" placeholder="lightmorphic/chkt-data">
       <label for="s-token">Access token {% if github_token_set %}<span class="badge">saved</span>{% endif %}</label>
       <input id="s-token" name="github_token" type="password"
              placeholder="{{ '••••••••  (leave blank to keep)' if github_token_set else 'fine-grained token, Contents read/write' }}">

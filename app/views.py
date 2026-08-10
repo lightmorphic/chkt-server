@@ -158,10 +158,12 @@ def settings_page():
         elif section == "github":
             save_form(request.form, ["github_repo", "github_token"])
             message = "GitHub backup settings saved."
+    from .update_check import VERSION, available_update
     values = {k: setting(k) for k in ("alert_email", "smtp_host", "smtp_port",
                                       "smtp_from", "smtp_username", "github_repo")}
     return render_template(
         "settings.html", values=values, message=message,
+        server_version=VERSION, update_available=available_update(),
         smtp_password_set=bool(setting("smtp_password")),
         github_token_set=bool(setting("github_token")),
         totp_enabled=bool(setting("totp_secret")),

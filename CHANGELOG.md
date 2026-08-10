@@ -25,4 +25,6 @@ First release.
   Do Not Disturb flags, delete-once-dismissed, and an active toggle, all
   synced with the app.
 - A default "Reminders" list is created on first-run setup.
+- Update notice on Settings when a newer server release exists on GitHub
+  (checked at most daily, fails silently offline).
 - Docker packaging with healthcheck; single-worker by design.

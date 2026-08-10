@@ -127,7 +127,7 @@ def _prune():
 
 def _github_push(name: str, path: str):
     """Offsite copy via the GitHub contents API. Quietly skipped when not set up."""
-    repo = setting("github_repo")     # e.g. "FOSSCharlie/chkt-data"
+    repo = setting("github_repo")     # e.g. "lightmorphic/chkt-data"
     token = setting("github_token")
     if not repo or not token:
         return

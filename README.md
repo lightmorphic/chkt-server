@@ -1,6 +1,6 @@
 # Chkt Server
 
-The self-hosted companion to [Chkt](https://github.com/FOSSCharlie/chkt),
+The self-hosted companion to [Chkt](https://github.com/lightmorphic/chkt),
 the talking reminders app. Run it in Docker on your own server and you get:
 
 - The **full Chkt experience in any browser**, same lists, same reminders,
@@ -17,7 +17,7 @@ GPL-3.0, no tracking, no third-party services beyond what you configure.
 Requirements: Docker with the compose plugin.
 
 ```bash
-git clone https://github.com/FOSSCharlie/chkt-server
+git clone https://github.com/lightmorphic/chkt-server
 cd chkt-server
 echo "SECRET_KEY=$(python3 -c 'import secrets; print(secrets.token_urlsafe(48))')" > .env
 docker compose up -d --build
