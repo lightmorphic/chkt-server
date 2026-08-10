@@ -202,18 +202,6 @@ td { padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--border); }
 #alert-overlay .alert-title { font-size: 1.5rem; font-weight: 700; margin: 0.5rem 0; }
 #alert-overlay .snoozes { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin-top: 0.75rem; }
 
-/* New-reminder wizard */
-.wizard-q { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 1rem; }
-.wizard-progress {
-  height: 4px; border-radius: 999px; background: var(--muted);
-  margin-bottom: 1.25rem; overflow: hidden;
-}
-.wizard-progress > div {
-  height: 100%; width: 0; background: var(--accent);
-  border-radius: 999px; transition: width 200ms ease;
-}
-.wizard-nav { margin-top: 1.5rem; }
-
 /* Auth pages */
 .auth-wrap { min-height: 100dvh; display: grid; place-items: center; padding: 1.25rem; }
 .auth-wrap .panel { width: 100%; max-width: 24rem; }

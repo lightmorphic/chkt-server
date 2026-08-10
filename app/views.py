@@ -90,11 +90,9 @@ def reminder_edit(reminder_id=None):
         if saved:
             store.upsert_reminder(saved)
             return redirect(url_for("views.home"))
-    # Creating is a guided one-question-at-a-time flow, matching the app;
-    # editing an existing reminder shows everything at once.
-    template = "edit_reminder.html" if reminder else "new_reminder.html"
+    # One screen with every field for both creating and editing, matching the app.
     return render_template(
-        template,
+        "edit_reminder.html",
         reminder=reminder, lists=store.lists(),
         alert_modes=ALERT_MODES, csrf=csrf_token(),
         preset_list=request.args.get("list", ""),
