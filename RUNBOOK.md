@@ -19,7 +19,7 @@ curl -s http://127.0.0.1:8321/healthz
 docker compose restart chkt
 ```
 
-## It's misbehaving — see what it's saying
+## It's misbehaving, see what it's saying
 
 ```bash
 docker compose logs --tail 100 chkt
@@ -40,7 +40,7 @@ git checkout abc1234
 docker compose up -d --build
 ```
 
-Your data is safe during a rollback — it lives in `data/`, outside the
+Your data is safe during a rollback: it lives in `data/`, outside the
 container.
 
 ## Restore a backup
@@ -53,7 +53,7 @@ backup repository, if configured). To restore one:
    **Replace everything** to go back exactly to that day.
 3. Click Import (it asks for a second click to confirm).
 
-Test this occasionally with Merge and a recent file — a backup you've never
+Test this occasionally with Merge and a recent file. A backup you've never
 restored is a hope, not a backup.
 
 ## Move to a new server
@@ -70,5 +70,5 @@ and re-enter those settings on the Settings page.
 
 ## Something fires twice
 
-The container must run as a single instance — check nothing has started a
+The container must run as a single instance, check nothing has started a
 second copy: `docker ps | grep chkt` should show exactly one.

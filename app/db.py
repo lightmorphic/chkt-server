@@ -95,7 +95,7 @@ def new_id():
 @contextlib.contextmanager
 def connect():
     """Yields a connection that commits on success, rolls back on error, and
-    always closes — `with sqlite3.connect(...)` alone never closes."""
+    always closes, `with sqlite3.connect(...)` alone never closes."""
     path = db_path()
     os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
     conn = sqlite3.connect(path)

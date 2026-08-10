@@ -1,4 +1,4 @@
-"""Outgoing email over plain SMTP — provider-agnostic.
+"""Outgoing email over plain SMTP, provider-agnostic.
 
 Fail-safe and visible: if SMTP isn't fully configured, nothing pretends to
 send. The message is recorded and the UI says so.
@@ -16,10 +16,10 @@ def send(subject: str, body: str, to: str | None = None):
     recipient = to or setting("alert_email")
     if not recipient:
         _record(subject, body, "No alert email address is set.")
-        return False, "No alert email address is set — message recorded instead."
+        return False, "No alert email address is set, message recorded instead."
     if not smtp_configured():
         _record(subject, body, "SMTP is not fully configured.")
-        return False, "Email isn't fully set up — message recorded instead of sent."
+        return False, "Email isn't fully set up, message recorded instead of sent."
 
     msg = EmailMessage()
     msg["Subject"] = subject

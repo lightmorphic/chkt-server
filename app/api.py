@@ -1,4 +1,4 @@
-"""Sync API — the contract the Android app's SyncClient speaks.
+"""Sync API, the contract the Android app's SyncClient speaks.
 
 Auth is a Bearer access key created on the Devices page. Merge is
 newest-wins by updated_at with tombstones; completion logs are append-only.

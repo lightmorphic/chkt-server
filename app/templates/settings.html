@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Settings — Chkt{% endblock %}
+{% block title %}Settings · Chkt{% endblock %}
 {% block content %}
 <h1>Settings</h1>
 {% if message %}<p class="msg ok">✓ {{ message }}</p>{% endif %}
@@ -7,7 +7,7 @@
 <div class="list-grid">
   <section class="panel">
     <h2>Alert email</h2>
-    <p class="hint">Where Chkt sends you problem reports and test messages. Standard SMTP — any provider.</p>
+    <p class="hint">Where Chkt sends you problem reports and test messages. Standard SMTP, any provider.</p>
     <form method="post">
       <input type="hidden" name="csrf" value="{{ csrf }}">
       <input type="hidden" name="section" value="email">
@@ -66,7 +66,7 @@
       <form method="post" action="{{ url_for('views.settings_2fa') }}">
         <input type="hidden" name="csrf" value="{{ csrf }}">
         <input type="hidden" name="action" value="disable">
-        <button type="submit" data-confirm title="Turn off 2FA — click again to confirm">Turn off 2FA</button>
+        <button type="submit" data-confirm title="Turn off 2FA, click again to confirm">Turn off 2FA</button>
       </form>
     {% else %}
       <p class="hint">Optional. Adds a 6-digit authenticator code to your login.</p>
@@ -96,7 +96,7 @@
       <label style="display:flex;gap:0.5rem;align-items:center;font-weight:400">
         <input style="width:auto" type="radio" name="mode" value="replace"> Replace everything
       </label>
-      <p style="margin-bottom:0"><button type="submit" data-confirm title="Import the file — click again to confirm">Import</button></p>
+      <p style="margin-bottom:0"><button type="submit" data-confirm title="Import the file, click again to confirm">Import</button></p>
     </form>
   </section>
 

@@ -1,4 +1,4 @@
-"""Mirror of the Android RepeatRuleTest — same cases, same expected results,
+"""Mirror of the Android RepeatRuleTest, same cases, same expected results,
 so the two implementations can never quietly disagree."""
 import unittest
 from datetime import datetime

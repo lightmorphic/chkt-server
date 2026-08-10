@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ 'Edit reminder' if reminder else 'New reminder' }} — Chkt{% endblock %}
+{% block title %}{{ 'Edit reminder' if reminder else 'New reminder' }} · Chkt{% endblock %}
 {% block content %}
 <h1>{{ 'Edit reminder' if reminder else 'New reminder' }}</h1>
 
@@ -110,7 +110,7 @@
         <input id="f-radius" name="radius" inputmode="numeric" value="{{ reminder.radius_metres|int if reminder else 150 }}">
       </div>
     </div>
-    <p class="hint">Location alerts fire on the phone, which is the thing that travels — set the place here and the app picks it up on the next sync. <button class="btn-quiet" type="button" data-use-location>Use my location now</button></p>
+    <p class="hint">Location alerts fire on the phone, which is the thing that travels, set the place here and the app picks it up on the next sync. <button class="btn-quiet" type="button" data-use-location>Use my location now</button></p>
   </div>
 
   <p style="margin-bottom:0;margin-top:1.25rem">

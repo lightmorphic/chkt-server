@@ -115,7 +115,7 @@ def second_factor():
             session["user"] = account["username"]
             session.permanent = True
             return redirect(url_for("views.home"))
-        error = "That code didn't match. Codes change every 30 seconds — try the current one."
+        error = "That code didn't match. Codes change every 30 seconds, try the current one."
     return render_template("second_factor.html", error=error)
 
 

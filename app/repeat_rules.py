@@ -1,4 +1,4 @@
-"""Python twin of the Android RepeatRule engine — same string format, same
+"""Python twin of the Android RepeatRule engine, same string format, same
 next-occurrence behaviour, so a reminder repeats identically wherever it lives.
 
 Formats: "" | "DAILY" | "WEEKLY:MON,THU" | "MONTHLY:15" | "MONTHLY:LAST"

@@ -161,8 +161,8 @@ def github_test() -> str:
         with urllib.request.urlopen(req, timeout=15) as resp:
             info = json.load(resp)
         if info.get("private") is False:
-            return "Connected — but that repository is PUBLIC. Use a private one for backups."
-        return "Connected — repository reachable and private."
+            return "Connected, but that repository is PUBLIC. Use a private one for backups."
+        return "Connected. Repository reachable and private."
     except Exception as e:
         return f"Couldn't reach the repository: {e}"
 

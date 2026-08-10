@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Set up — Chkt</title>
+  <title>Set up · Chkt</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
 <div class="auth-wrap">
   <div class="panel">
     <h1 style="font-size:1.5rem">Welcome to Chkt</h1>
-    <p class="hint">First run — create the account you'll sign in with. There's only ever one.</p>
+    <p class="hint">First run, create the account you'll sign in with. There's only ever one.</p>
     {% if error %}<p class="msg bad">! {{ error }}</p>{% endif %}
     <form method="post">
       <label for="s-user">Username</label>

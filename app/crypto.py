@@ -15,7 +15,7 @@ from cryptography.fernet import Fernet
 def _fernet() -> Fernet:
     secret = os.environ.get("SECRET_KEY", "")
     if not secret:
-        raise RuntimeError("SECRET_KEY is not set — refusing to store secrets unencrypted.")
+        raise RuntimeError("SECRET_KEY is not set, refusing to store secrets unencrypted.")
     digest = hashlib.sha256(("chkt-settings:" + secret).encode()).digest()
     return Fernet(base64.urlsafe_b64encode(digest))
 

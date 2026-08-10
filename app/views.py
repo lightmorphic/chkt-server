@@ -26,7 +26,7 @@ SNOOZES = [(10, "10 min"), (30, "30 min"), (60, "1 hr"), (180, "3 hrs"), (720, "
 
 def _csrf_or_400():
     if not check_csrf():
-        abort(400, "The form has expired — reload the page and try again.")
+        abort(400, "The form has expired, reload the page and try again.")
 
 
 @bp.get("/healthz")
@@ -179,7 +179,7 @@ def settings_test_email():
 def settings_test_github():
     _csrf_or_400()
     message = backup.github_test()
-    return render_template("fragment_message.html", message=message, ok=message.startswith("Connected — repository"))
+    return render_template("fragment_message.html", message=message, ok=message.startswith("Connected. Repository"))
 
 
 @bp.post("/settings/backup-now")
@@ -209,7 +209,7 @@ def settings_2fa():
             return redirect(url_for("views.settings_page"))
         uri = pyotp.TOTP(secret).provisioning_uri(name="chkt", issuer_name="Chkt Server") if secret else ""
         return render_template("twofa_confirm.html", secret=secret, uri=uri,
-                               error="That code didn't match — try again.", csrf=csrf_token())
+                               error="That code didn't match, try again.", csrf=csrf_token())
     if action == "disable":
         setting_put("totp_secret", "")
     return redirect(url_for("views.settings_page"))
@@ -251,7 +251,7 @@ def export_md():
             entry = f"- [ ] **{r['title']}**"
             described = _describe(r)
             if described:
-                entry += f" — {described}"
+                entry += f", {described}"
             lines.append(entry)
             if r["notes"]:
                 lines.append(f"  {r['notes']}")

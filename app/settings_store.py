@@ -1,5 +1,5 @@
 """Key-value settings, encrypted at rest. Secrets are never rendered back to
-a page — the UI shows a mask, and saving an empty field keeps the old value.
+a page, the UI shows a mask, and saving an empty field keeps the old value.
 """
 import json
 

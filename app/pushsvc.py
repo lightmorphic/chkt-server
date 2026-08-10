@@ -2,7 +2,7 @@
 
 A background thread wakes every 20 seconds, finds reminders whose time has
 arrived, pushes a notification to every subscribed browser, records the fire,
-and advances repeating reminders — mirroring what the Android app does
+and advances repeating reminders, mirroring what the Android app does
 locally. An open Chkt page also polls /web/fired and does the talking
 (browser speech synthesis) client-side.
 """
@@ -69,7 +69,7 @@ def _push_all(title: str, body: str, reminder_id: str):
                 vapid_claims=dict(claims),
             )
         except WebPushException as e:
-            # 404/410 means the browser dropped the subscription — forget it.
+            # 404/410 means the browser dropped the subscription, forget it.
             status = getattr(getattr(e, "response", None), "status_code", None)
             if status in (404, 410):
                 with db.connect() as conn:
@@ -79,7 +79,7 @@ def _push_all(title: str, body: str, reminder_id: str):
 
 
 def recently_fired(since_millis: int):
-    """Fires newer than `since` — the web page polls this to alert in-page."""
+    """Fires newer than `since`, the web page polls this to alert in-page."""
     with db.connect() as conn:
         rows = conn.execute(
             "SELECT f.reminder_id, f.due_at, f.fired_at, r.title, r.notes, r.alert_mode, r.pre_tone "

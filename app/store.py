@@ -1,4 +1,4 @@
-"""Reminder data operations — the single write path for both the web UI and
+"""Reminder data operations, the single write path for both the web UI and
 the sync API, so nothing can drift.
 """
 from datetime import datetime
