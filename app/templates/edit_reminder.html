@@ -87,6 +87,41 @@
     <input style="width:auto" type="checkbox" name="pre_tone" {% if reminder and reminder.pre_tone %}checked{% endif %}>
     Play a tone before speaking
   </label>
+  <label style="display:flex;gap:0.5rem;align-items:center;font-weight:400">
+    <input style="width:auto" type="checkbox" name="vibrate" {% if not reminder or reminder.vibrate %}checked{% endif %}>
+    Vibrate (on your phone)
+  </label>
+  <label style="display:flex;gap:0.5rem;align-items:center;font-weight:400">
+    <input style="width:auto" type="checkbox" name="respect_dnd" {% if reminder and reminder.respect_dnd %}checked{% endif %}>
+    Stay quiet during Do Not Disturb
+  </label>
+
+  <label for="f-nag">If not answered, repeat the alert</label>
+  <select id="f-nag" name="nag_interval" data-nag-select>
+    {% set nag = reminder.nag_interval_minutes if reminder else 0 %}
+    <option value="0" {% if nag == 0 %}selected{% endif %}>Alert once only</option>
+    <option value="1" {% if nag == 1 %}selected{% endif %}>Every minute</option>
+    <option value="2" {% if nag == 2 %}selected{% endif %}>Every 2 minutes</option>
+    <option value="5" {% if nag == 5 %}selected{% endif %}>Every 5 minutes</option>
+  </select>
+  <div data-nag-stop {% if not reminder or reminder.nag_interval_minutes == 0 %}hidden{% endif %}>
+    <label for="f-nag-stop">And give up after</label>
+    <select id="f-nag-stop" name="nag_stop_after">
+      {% set stop = reminder.nag_stop_after_minutes if reminder else 60 %}
+      <option value="15" {% if stop == 15 %}selected{% endif %}>15 minutes</option>
+      <option value="30" {% if stop == 30 %}selected{% endif %}>30 minutes</option>
+      <option value="60" {% if stop == 60 %}selected{% endif %}>1 hour</option>
+      <option value="120" {% if stop == 120 %}selected{% endif %}>2 hours</option>
+    </select>
+  </div>
+  <label style="display:flex;gap:0.5rem;align-items:center;font-weight:400">
+    <input style="width:auto" type="checkbox" name="delete_after_dismissed" {% if reminder and reminder.delete_after_dismissed %}checked{% endif %}>
+    Delete the reminder once dismissed
+  </label>
+  <label style="display:flex;gap:0.5rem;align-items:center;font-weight:400">
+    <input style="width:auto" type="checkbox" name="active" {% if not reminder or reminder.enabled %}checked{% endif %}>
+    Active
+  </label>
 
   <label for="f-loc">Location</label>
   <select id="f-loc" name="location_trigger" data-loc-select>

@@ -19,4 +19,10 @@ First release.
   repository, zip-everything download, and merge/replace restore.
 - JSON and markdown export.
 - Completion statistics.
+- Guided one-question-at-a-time flow for creating reminders, matching the
+  app; the full form remains for editing.
+- Per-reminder nag re-alerts (1/2/5 min) with automatic stop, vibration and
+  Do Not Disturb flags, delete-once-dismissed, and an active toggle, all
+  synced with the app.
+- A default "Reminders" list is created on first-run setup.
 - Docker packaging with healthcheck; single-worker by design.

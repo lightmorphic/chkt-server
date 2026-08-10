@@ -90,8 +90,11 @@ def reminder_edit(reminder_id=None):
         if saved:
             store.upsert_reminder(saved)
             return redirect(url_for("views.home"))
+    # Creating is a guided one-question-at-a-time flow, matching the app;
+    # editing an existing reminder shows everything at once.
+    template = "edit_reminder.html" if reminder else "new_reminder.html"
     return render_template(
-        "edit_reminder.html",
+        template,
         reminder=reminder, lists=store.lists(),
         alert_modes=ALERT_MODES, csrf=csrf_token(),
         preset_list=request.args.get("list", ""),
@@ -113,8 +116,7 @@ def reminder_done(reminder_id):
     _csrf_or_400()
     r = store.get_reminder(reminder_id)
     if r:
-        store.add_log(reminder_id, r.get("due_at") or db.now_millis(), "DONE")
-        store.advance_after_fire(r)
+        store.acknowledge(reminder_id, r.get("due_at") or db.now_millis(), "DONE")
     return redirect(request.referrer or url_for("views.home"))
 
 
@@ -127,6 +129,7 @@ def reminder_snooze(reminder_id):
     if r and 1 <= minutes <= 1440:
         store.add_log(reminder_id, r.get("due_at") or db.now_millis(), "SNOOZED")
         r["snoozed_until"] = db.now_millis() + minutes * 60_000
+        r["nag_started_at"] = None
         r["updated_at"] = db.now_millis()
         store.upsert_reminder(r)
     return redirect(request.referrer or url_for("views.home"))
@@ -384,6 +387,14 @@ def _reminder_from_form(form, existing):
         except ValueError:
             return None
 
+    def _int_in(name, allowed, fallback):
+        raw = (form.get(name) or "").strip()
+        try:
+            value = int(raw)
+        except ValueError:
+            return fallback
+        return value if value in allowed else fallback
+
     now = db.now_millis()
     base = existing or {
         "id": db.new_id(), "created_at": now, "snoozed_until": None, "deleted_at": None,
@@ -397,7 +408,13 @@ def _reminder_from_form(form, existing):
         "repeat_rule": rule,
         "alert_mode": form.get("alert_mode") if form.get("alert_mode") in dict(ALERT_MODES) else "RING_AND_SPEAK",
         "pre_tone": 1 if form.get("pre_tone") else 0,
-        "enabled": 1,
+        "enabled": 1 if form.get("active") else 0,
+        "vibrate": 1 if form.get("vibrate") else 0,
+        "respect_dnd": 1 if form.get("respect_dnd") else 0,
+        "nag_interval_minutes": _int_in("nag_interval", {0, 1, 2, 5}, 0),
+        "nag_stop_after_minutes": _int_in("nag_stop_after", {15, 30, 60, 120}, 60),
+        "nag_started_at": None,
+        "delete_after_dismissed": 1 if form.get("delete_after_dismissed") else 0,
         "location_trigger": trigger,
         "latitude": _float_or_none("latitude"),
         "longitude": _float_or_none("longitude"),

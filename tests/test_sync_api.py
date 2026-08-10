@@ -21,6 +21,8 @@ def reminder_json(rid, list_id, title, updated_at, **kw):
         "id": rid, "listId": list_id, "title": title, "notes": "",
         "dueAt": 1900000000000, "repeatRule": "", "alertMode": "RING_AND_SPEAK",
         "preTone": False, "enabled": True, "snoozedUntil": None,
+        "vibrate": True, "respectDnd": False, "nagIntervalMinutes": 0,
+        "nagStopAfterMinutes": 60, "deleteAfterDismissed": False,
         "locationTrigger": "NONE", "latitude": None, "longitude": None,
         "radiusMetres": 150.0, "createdAt": updated_at, "updatedAt": updated_at,
         "deletedAt": None,
@@ -107,6 +109,25 @@ class SyncApiTest(unittest.TestCase):
     def test_07_healthz_open_but_harmless(self):
         r = self.client.get("/healthz")
         self.assertEqual(200, r.status_code)
+
+    def test_08_nag_fields_round_trip(self):
+        self._sync({"since": 0, "lists": [], "logs": [],
+                    "reminders": [reminder_json("R2", "L1", "Nagging one", 6000,
+                                                nagIntervalMinutes=5, nagStopAfterMinutes=30,
+                                                vibrate=False, respectDnd=True,
+                                                deleteAfterDismissed=True)]})
+        r = self._sync({"since": 5500, "lists": [], "reminders": [], "logs": []})
+        rec = [x for x in r.get_json()["reminders"] if x["id"] == "R2"][0]
+        self.assertEqual(5, rec["nagIntervalMinutes"])
+        self.assertEqual(30, rec["nagStopAfterMinutes"])
+        self.assertFalse(rec["vibrate"])
+        self.assertTrue(rec["respectDnd"])
+        self.assertTrue(rec["deleteAfterDismissed"])
+
+    def test_09_acknowledge_deletes_when_asked(self):
+        from app import store
+        store.acknowledge("R2", 1, "DONE")
+        self.assertIsNotNone(store.get_reminder("R2")["deleted_at"])
 
     def test_08_web_requires_login(self):
         r = self.client.get("/", follow_redirects=False)

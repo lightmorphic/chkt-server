@@ -9,7 +9,9 @@ from .repeat_rules import next_after
 LIST_FIELDS = ("id", "name", "position", "updated_at", "deleted_at")
 REMINDER_FIELDS = (
     "id", "list_id", "title", "notes", "due_at", "repeat_rule", "alert_mode",
-    "pre_tone", "enabled", "snoozed_until", "location_trigger", "latitude",
+    "pre_tone", "enabled", "vibrate", "respect_dnd", "nag_interval_minutes",
+    "nag_stop_after_minutes", "nag_started_at", "delete_after_dismissed",
+    "snoozed_until", "location_trigger", "latitude",
     "longitude", "radius_metres", "created_at", "updated_at", "deleted_at",
 )
 
@@ -98,6 +100,7 @@ def advance_after_fire(reminder: dict):
                          datetime.now().astimezone())
     updated = dict(reminder)
     updated["snoozed_until"] = None
+    updated["nag_started_at"] = None
     updated["updated_at"] = now
     if nxt is not None:
         updated["due_at"] = int(nxt.timestamp() * 1000)
@@ -105,6 +108,46 @@ def advance_after_fire(reminder: dict):
         updated["enabled"] = 0
     upsert_reminder(updated)
     return updated
+
+
+def acknowledge(reminder_id: str, due_at: int, action: str):
+    """User answered (DONE) or dismissed (MISSED): log, stop nagging, advance,
+    and honour delete-after-dismissed. Single path shared by UI and engine."""
+    reminder = get_reminder(reminder_id)
+    if reminder is None:
+        return
+    add_log(reminder_id, due_at, action)
+    if reminder.get("delete_after_dismissed"):
+        soft_delete("reminders", reminder_id)
+        return
+    advance_after_fire(reminder)
+
+
+def nagging_now():
+    """Reminders mid-nag: fired once, unanswered, nag interval set."""
+    with db.connect() as conn:
+        return [dict(r) for r in conn.execute(
+            "SELECT * FROM reminders WHERE deleted_at IS NULL AND enabled = 1 "
+            "AND nag_started_at IS NOT NULL AND nag_interval_minutes > 0").fetchall()]
+
+
+def set_nag_started(reminder_id: str, at: int):
+    with db.connect() as conn:
+        conn.execute("UPDATE reminders SET nag_started_at = ? WHERE id = ?", (at, reminder_id))
+
+
+def last_fired_at(reminder_id: str):
+    with db.connect() as conn:
+        row = conn.execute(
+            "SELECT MAX(fired_at) m FROM fired WHERE reminder_id = ?", (reminder_id,)).fetchone()
+        return row["m"]
+
+
+def touch_fired(reminder_id: str, due_at: int):
+    """Refresh the fire timestamp for a nag re-alert so pollers re-announce it."""
+    with db.connect() as conn:
+        conn.execute("UPDATE fired SET fired_at = ? WHERE reminder_id = ? AND due_at = ?",
+                     (db.now_millis(), reminder_id, due_at))
 
 
 def due_now():

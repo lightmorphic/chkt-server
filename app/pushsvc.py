@@ -91,11 +91,30 @@ def recently_fired(since_millis: int):
 def _loop():
     while True:
         try:
+            now = db.now_millis()
+
             for reminder in store.due_now():
                 fire_at = reminder["snoozed_until"] or reminder["due_at"]
                 store.mark_fired(reminder["id"], fire_at)
                 _push_all(reminder["title"], reminder.get("notes") or "", reminder["id"])
-                store.advance_after_fire(reminder)
+                if reminder.get("nag_interval_minutes"):
+                    # Keep the occurrence live and keep reminding until answered.
+                    store.set_nag_started(reminder["id"], now)
+                else:
+                    store.advance_after_fire(reminder)
+
+            for reminder in store.nagging_now():
+                started = reminder["nag_started_at"]
+                fire_at = reminder["snoozed_until"] or reminder["due_at"] or started
+                if now - started >= reminder["nag_stop_after_minutes"] * 60_000:
+                    # Gave it a fair go; count it missed and move on.
+                    store.add_log(reminder["id"], fire_at, "MISSED")
+                    store.advance_after_fire(reminder)
+                    continue
+                last = store.last_fired_at(reminder["id"]) or started
+                if now - last >= reminder["nag_interval_minutes"] * 60_000:
+                    store.touch_fired(reminder["id"], fire_at)
+                    _push_all(reminder["title"], reminder.get("notes") or "", reminder["id"])
         except Exception:
             # The engine must never die; next tick retries.
             pass

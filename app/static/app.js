@@ -20,6 +20,68 @@
     }
   });
 
+  /* ---- New-reminder wizard: one question at a time, like the app. ---- */
+  var wizard = document.querySelector("[data-wizard]");
+  if (wizard) {
+    var steps = Array.prototype.slice.call(wizard.querySelectorAll("[data-step]"));
+    var backBtn = wizard.querySelector("[data-wizard-back]");
+    var nextBtn = wizard.querySelector("[data-wizard-next]");
+    var saveBtn = wizard.querySelector("[data-wizard-save]");
+    var bar = wizard.querySelector("[data-wizard-bar]");
+    var current = 0;
+
+    function showStep(index) {
+      current = index;
+      steps.forEach(function (section, i) { section.hidden = i !== index; });
+      backBtn.hidden = index === 0;
+      var last = index === steps.length - 1;
+      nextBtn.hidden = last;
+      saveBtn.hidden = !last;
+      if (bar) bar.style.width = (((index + 1) / steps.length) * 100) + "%";
+      if (last) buildSummary();
+    }
+
+    function stepValid(index) {
+      var missing = steps[index].querySelector("[data-required-step]");
+      if (!missing) return true;
+      if (missing.value.trim() === "") { missing.reportValidity ? missing.reportValidity() : missing.focus(); return false; }
+      return true;
+    }
+
+    function buildSummary() {
+      var title = wizard.querySelector("[name=title]").value.trim();
+      var due = wizard.querySelector("[name=due]").value;
+      var repeat = wizard.querySelector("[name=repeat_kind]");
+      var alert = wizard.querySelector("[name=alert_mode]");
+      var nag = wizard.querySelector("[name=nag_interval]");
+      var nagStop = wizard.querySelector("[name=nag_stop_after]");
+      var list = wizard.querySelector("[name=list_id]");
+      var active = wizard.querySelector("[name=active]").checked;
+      var lines = ["“" + title + "”"];
+      if (due) lines.push(new Date(due).toLocaleString([], { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }));
+      if (repeat.value !== "NONE") lines.push("Repeats: " + repeat.options[repeat.selectedIndex].text.toLowerCase());
+      lines.push("Alert: " + alert.options[alert.selectedIndex].text.toLowerCase());
+      if (nag.value !== "0") lines.push("If unanswered: again every " + nag.value + " min, giving up after " + nagStop.options[nagStop.selectedIndex].text);
+      if (list.options.length > 1) lines.push("List: " + list.options[list.selectedIndex].text);
+      if (!active) lines.push("Saved switched off.");
+      wizard.querySelector("[data-wizard-summary]").textContent = lines.join("\n");
+    }
+
+    nextBtn.addEventListener("click", function () {
+      if (stepValid(current)) showStep(current + 1);
+    });
+    backBtn.addEventListener("click", function () { showStep(current - 1); });
+    showStep(0);
+  }
+
+  /* Nag interval reveals its give-up-after control (wizard and edit form). */
+  document.querySelectorAll("[data-nag-select]").forEach(function (select) {
+    select.addEventListener("change", function () {
+      var stop = select.closest("form").querySelector("[data-nag-stop]");
+      if (stop) stop.hidden = select.value === "0";
+    });
+  });
+
   /* ---- Edit form: show only the controls for the chosen repeat kind. ---- */
   var repeatSelect = document.querySelector("[data-repeat-select]");
   function syncRepeatPanels() {
