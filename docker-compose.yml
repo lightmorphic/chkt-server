@@ -1,10 +1,10 @@
 services:
   chkt:
     build: .
-    container_name: chkt
+    container_name: chkt-server
     restart: unless-stopped
     ports:
-      - "127.0.0.1:8321:8321"
+      - "8321:8321"
     environment:
       # The one and only secret. Set it once in .env next to this file:
       #   SECRET_KEY=<output of: python3 -c "import secrets; print(secrets.token_urlsafe(48))">
