@@ -15,16 +15,9 @@ def db_path():
     return os.environ.get("CHKT_DB", os.path.join(os.path.dirname(__file__), "..", "data", "chkt.db"))
 
 SCHEMA = """
-CREATE TABLE IF NOT EXISTS lists (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    position INTEGER NOT NULL DEFAULT 0,
-    updated_at INTEGER NOT NULL,
-    deleted_at INTEGER
-);
 CREATE TABLE IF NOT EXISTS reminders (
     id TEXT PRIMARY KEY,
-    list_id TEXT NOT NULL,
+    tags TEXT NOT NULL DEFAULT '',
     title TEXT NOT NULL,
     notes TEXT NOT NULL DEFAULT '',
     due_at INTEGER,
@@ -47,7 +40,6 @@ CREATE TABLE IF NOT EXISTS reminders (
     updated_at INTEGER NOT NULL,
     deleted_at INTEGER
 );
-CREATE INDEX IF NOT EXISTS idx_reminders_list ON reminders(list_id);
 CREATE INDEX IF NOT EXISTS idx_reminders_due ON reminders(due_at);
 CREATE TABLE IF NOT EXISTS completion_log (
     id TEXT PRIMARY KEY,

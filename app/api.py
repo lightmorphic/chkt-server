@@ -35,14 +35,6 @@ def sync():
     # don't echo straight back.
     outgoing = store.changed_since(since)
 
-    for record in body.get("lists") or []:
-        incoming = _list_from_json(record)
-        if incoming is None:
-            continue
-        existing = _existing("lists", incoming["id"])
-        if existing is None or existing["updated_at"] < incoming["updated_at"]:
-            store.upsert_list(incoming)
-
     for record in body.get("reminders") or []:
         incoming = _reminder_from_json(record)
         if incoming is None:
@@ -65,7 +57,6 @@ def sync():
 
     return jsonify({
         "now": db.now_millis(),
-        "lists": [_list_to_json(r) for r in outgoing["lists"]],
         "reminders": [_reminder_to_json(r) for r in outgoing["reminders"]],
         "logs": [
             {"id": r["id"], "reminderId": r["reminder_id"], "dueAt": r["due_at"],
@@ -81,27 +72,10 @@ def _existing(table, record_id):
         return dict(row) if row else None
 
 
-def _list_from_json(o):
-    try:
-        return {
-            "id": str(o["id"]), "name": str(o["name"]),
-            "position": int(o.get("position") or 0),
-            "updated_at": int(o["updatedAt"]),
-            "deleted_at": int(o["deletedAt"]) if o.get("deletedAt") is not None else None,
-        }
-    except (KeyError, TypeError, ValueError):
-        return None
-
-
-def _list_to_json(r):
-    return {"id": r["id"], "name": r["name"], "position": r["position"],
-            "updatedAt": r["updated_at"], "deletedAt": r["deleted_at"]}
-
-
 def _reminder_from_json(o):
     try:
         return {
-            "id": str(o["id"]), "list_id": str(o["listId"]),
+            "id": str(o["id"]), "tags": str(o.get("tags") or ""),
             "title": str(o["title"]), "notes": str(o.get("notes") or ""),
             "due_at": int(o["dueAt"]) if o.get("dueAt") is not None else None,
             "repeat_rule": str(o.get("repeatRule") or ""),
@@ -129,7 +103,7 @@ def _reminder_from_json(o):
 
 def _reminder_to_json(r):
     return {
-        "id": r["id"], "listId": r["list_id"], "title": r["title"], "notes": r["notes"],
+        "id": r["id"], "tags": r["tags"], "title": r["title"], "notes": r["notes"],
         "dueAt": r["due_at"], "repeatRule": r["repeat_rule"], "alertMode": r["alert_mode"],
         "preTone": bool(r["pre_tone"]), "enabled": bool(r["enabled"]),
         "vibrate": bool(r["vibrate"]), "respectDnd": bool(r["respect_dnd"]),

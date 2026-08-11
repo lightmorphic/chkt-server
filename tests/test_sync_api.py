@@ -16,9 +16,9 @@ from app import db, store  # noqa: E402
 from app.auth import new_access_key  # noqa: E402
 
 
-def reminder_json(rid, list_id, title, updated_at, **kw):
+def reminder_json(rid, tags, title, updated_at, **kw):
     base = {
-        "id": rid, "listId": list_id, "title": title, "notes": "",
+        "id": rid, "tags": tags, "title": title, "notes": "",
         "dueAt": 1900000000000, "repeatRule": "", "alertMode": "RING_AND_SPEAK",
         "preTone": False, "enabled": True, "snoozedUntil": None,
         "vibrate": True, "respectDnd": False, "nagIntervalMinutes": 0,
@@ -55,45 +55,44 @@ class SyncApiTest(unittest.TestCase):
     def test_02_push_then_pull(self):
         r = self._sync({
             "since": 0,
-            "lists": [{"id": "L1", "name": "Test list", "position": 0,
-                       "updatedAt": 1000, "deletedAt": None}],
-            "reminders": [reminder_json("R1", "L1", "Feed the cat", 1000)],
+            "reminders": [reminder_json("R1", "cat", "Feed the cat", 1000)],
             "logs": [],
         })
         self.assertEqual(200, r.status_code)
         # A second device syncing from zero receives the records.
-        r2 = self._sync({"since": 0, "lists": [], "reminders": [], "logs": []})
+        r2 = self._sync({"since": 0, "reminders": [], "logs": []})
         data = r2.get_json()
         self.assertIn("R1", [x["id"] for x in data["reminders"]])
-        self.assertIn("L1", [x["id"] for x in data["lists"]])
+        rec = [x for x in data["reminders"] if x["id"] == "R1"][0]
+        self.assertEqual("cat", rec["tags"])
 
     def test_03_newest_wins(self):
         # An older edit must not overwrite a newer one.
         self._sync({"since": 0, "lists": [],
-                    "reminders": [reminder_json("R1", "L1", "Feed the cat TWICE", 2000)],
+                    "reminders": [reminder_json("R1", "cat", "Feed the cat TWICE", 2000)],
                     "logs": []})
         self._sync({"since": 0, "lists": [],
-                    "reminders": [reminder_json("R1", "L1", "stale title", 1500)],
+                    "reminders": [reminder_json("R1", "cat", "stale title", 1500)],
                     "logs": []})
         self.assertEqual("Feed the cat TWICE", store.get_reminder("R1")["title"])
 
     def test_04_tombstone_wins_and_stays(self):
         self._sync({"since": 0, "lists": [],
-                    "reminders": [reminder_json("R1", "L1", "Feed the cat TWICE", 3000,
+                    "reminders": [reminder_json("R1", "cat", "Feed the cat TWICE", 3000,
                                                 deletedAt=3000)],
                     "logs": []})
         self.assertIsNotNone(store.get_reminder("R1")["deleted_at"])
         # The tombstone flows back out to other devices.
-        r = self._sync({"since": 2500, "lists": [], "reminders": [], "logs": []})
+        r = self._sync({"since": 2500, "reminders": [], "logs": []})
         rec = [x for x in r.get_json()["reminders"] if x["id"] == "R1"][0]
         self.assertIsNotNone(rec["deletedAt"])
 
     def test_05_logs_append_only(self):
-        self._sync({"since": 0, "lists": [], "reminders": [],
+        self._sync({"since": 0, "reminders": [],
                     "logs": [{"id": "G1", "reminderId": "R1", "dueAt": 1,
                               "action": "DONE", "at": 5000}]})
         # Duplicate ids are ignored, not duplicated.
-        self._sync({"since": 0, "lists": [], "reminders": [],
+        self._sync({"since": 0, "reminders": [],
                     "logs": [{"id": "G1", "reminderId": "R1", "dueAt": 1,
                               "action": "DONE", "at": 5000}]})
         with db.connect() as conn:
@@ -101,8 +100,7 @@ class SyncApiTest(unittest.TestCase):
         self.assertEqual(1, n)
 
     def test_06_malformed_records_skipped(self):
-        r = self._sync({"since": 0, "lists": [{"bad": "record"}],
-                        "reminders": [{"id": "X"}], "logs": [{"nope": 1}]})
+        r = self._sync({"since": 0, "reminders": [{"id": "X"}], "logs": [{"nope": 1}]})
         self.assertEqual(200, r.status_code)
         self.assertIsNone(store.get_reminder("X"))
 
@@ -111,12 +109,12 @@ class SyncApiTest(unittest.TestCase):
         self.assertEqual(200, r.status_code)
 
     def test_08_nag_fields_round_trip(self):
-        self._sync({"since": 0, "lists": [], "logs": [],
-                    "reminders": [reminder_json("R2", "L1", "Nagging one", 6000,
+        self._sync({"since": 0, "logs": [],
+                    "reminders": [reminder_json("R2", "cat, urgent", "Nagging one", 6000,
                                                 nagIntervalMinutes=5, nagStopAfterMinutes=30,
                                                 vibrate=False, respectDnd=True,
                                                 deleteAfterDismissed=True)]})
-        r = self._sync({"since": 5500, "lists": [], "reminders": [], "logs": []})
+        r = self._sync({"since": 5500, "reminders": [], "logs": []})
         rec = [x for x in r.get_json()["reminders"] if x["id"] == "R2"][0]
         self.assertEqual(5, rec["nagIntervalMinutes"])
         self.assertEqual(30, rec["nagStopAfterMinutes"])

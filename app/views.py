@@ -39,44 +39,13 @@ def healthz():
 @bp.get("/")
 @login_required
 def home():
-    all_lists = store.lists()
-    reminders = {l["id"]: store.reminders_for(l["id"]) for l in all_lists}
+    tag = (request.args.get("tag") or "").strip() or None
+    everything = store.reminders()
+    shown = [r for r in everything if tag is None or tag in store.tag_list(r)]
     return render_template(
-        "home.html", lists=all_lists, reminders=reminders,
-        describe=_describe, csrf=csrf_token(),
+        "home.html", reminders=shown, tags=store.all_tags(), active_tag=tag,
+        describe=_describe, tag_list=store.tag_list, csrf=csrf_token(),
     )
-
-
-@bp.post("/list/add")
-@login_required
-def list_add():
-    _csrf_or_400()
-    name = (request.form.get("name") or "").strip()
-    if name:
-        store.upsert_list({"id": db.new_id(), "name": name, "position": len(store.lists()),
-                           "updated_at": db.now_millis(), "deleted_at": None})
-    return redirect(url_for("views.home"))
-
-
-@bp.post("/list/<list_id>/rename")
-@login_required
-def list_rename(list_id):
-    _csrf_or_400()
-    name = (request.form.get("name") or "").strip()
-    for l in store.lists():
-        if l["id"] == list_id and name:
-            l["name"] = name
-            l["updated_at"] = db.now_millis()
-            store.upsert_list(l)
-    return redirect(url_for("views.home"))
-
-
-@bp.post("/list/<list_id>/delete")
-@login_required
-def list_delete(list_id):
-    _csrf_or_400()
-    store.soft_delete("lists", list_id)
-    return redirect(url_for("views.home"))
 
 
 @bp.route("/reminder/new", methods=["GET", "POST"])
@@ -93,9 +62,9 @@ def reminder_edit(reminder_id=None):
     # One screen with every field for both creating and editing, matching the app.
     return render_template(
         "edit_reminder.html",
-        reminder=reminder, lists=store.lists(),
+        reminder=reminder, known_tags=store.all_tags(),
         alert_modes=ALERT_MODES, csrf=csrf_token(),
-        preset_list=request.args.get("list", ""),
+        preset_tag=request.args.get("tag", ""),
         due_local=_millis_to_local(reminder["due_at"]) if reminder and reminder["due_at"] else "",
     )
 
@@ -247,19 +216,18 @@ def export_json_route():
 @login_required
 def export_md():
     lines = ["# Chkt reminders", ""]
-    for l in store.lists():
-        lines.append(f"## {l['name']}")
-        lines.append("")
-        for r in store.reminders_for(l["id"]):
-            entry = f"- [ ] **{r['title']}**"
-            described = _describe(r)
-            if described:
-                entry += f", {described}"
-            lines.append(entry)
-            if r["notes"]:
-                lines.append(f"  {r['notes']}")
-        lines.append("")
-    body = "\n".join(lines) + f"\n_Exported {datetime.now():%Y-%m-%d %H:%M} by Chkt._\n"
+    for r in store.reminders():
+        entry = f"- [ ] **{r['title']}**"
+        described = _describe(r)
+        if described:
+            entry += f", {described}"
+        hashtags = " ".join("#" + t for t in store.tag_list(r))
+        if hashtags:
+            entry += "  " + hashtags
+        lines.append(entry)
+        if r["notes"]:
+            lines.append(f"  {r['notes']}")
+    body = "\n".join(lines) + f"\n\n_Exported {datetime.now():%Y-%m-%d %H:%M} by Chkt._\n"
     return Response(body, mimetype="text/markdown",
                     headers={"Content-Disposition": "attachment; filename=chkt-export.md"})
 
@@ -400,8 +368,10 @@ def _reminder_from_form(form, existing):
         "id": db.new_id(), "created_at": now, "snoozed_until": None, "deleted_at": None,
     }
     record = dict(base)
+    tags = ", ".join(
+        t.strip() for t in (form.get("tags") or "").split(",") if t.strip())
     record.update({
-        "list_id": form.get("list_id") or (existing or {}).get("list_id"),
+        "tags": tags,
         "title": title,
         "notes": (form.get("notes") or "").strip(),
         "due_at": due_at,
@@ -421,6 +391,4 @@ def _reminder_from_form(form, existing):
         "radius_metres": _float_or_none("radius") or 150.0,
         "updated_at": now,
     })
-    if not record["list_id"]:
-        return None
     return record

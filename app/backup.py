@@ -31,15 +31,10 @@ def export_json() -> str:
     data = store.changed_since(0)
     return json.dumps({
         "app": "chkt",
-        "version": 1,
+        "version": 2,
         "exportedAt": datetime.now().astimezone().isoformat(),
-        "lists": [
-            {"id": r["id"], "name": r["name"], "position": r["position"],
-             "updatedAt": r["updated_at"], "deletedAt": r["deleted_at"]}
-            for r in data["lists"]
-        ],
         "reminders": [
-            {"id": r["id"], "listId": r["list_id"], "title": r["title"], "notes": r["notes"],
+            {"id": r["id"], "tags": r["tags"], "title": r["title"], "notes": r["notes"],
              "dueAt": r["due_at"], "repeatRule": r["repeat_rule"], "alertMode": r["alert_mode"],
              "preTone": bool(r["pre_tone"]), "enabled": bool(r["enabled"]),
              "vibrate": bool(r["vibrate"]), "respectDnd": bool(r["respect_dnd"]),
@@ -69,18 +64,15 @@ def import_json(raw: str, replace: bool = False) -> int:
         if replace:
             with db.connect() as conn:
                 conn.execute("DELETE FROM reminders")
-                conn.execute("DELETE FROM lists")
-        for o in data.get("lists", []):
-            store.upsert_list({
-                "id": str(o["id"]), "name": str(o["name"]),
-                "position": int(o.get("position") or 0),
-                "updated_at": int(o.get("updatedAt") or db.now_millis()),
-                "deleted_at": o.get("deletedAt"),
-            })
+        # v1 exports had lists; carry their names over as tags.
+        list_names = {str(o["id"]): str(o.get("name") or "")
+                      for o in data.get("lists", [])}
         count = 0
         for o in data.get("reminders", []):
             store.upsert_reminder({
-                "id": str(o["id"]), "list_id": str(o["listId"]),
+                "id": str(o["id"]),
+                "tags": str(o.get("tags") if o.get("tags") is not None
+                            else list_names.get(str(o.get("listId")), "")),
                 "title": str(o["title"]), "notes": str(o.get("notes") or ""),
                 "due_at": o.get("dueAt"), "repeat_rule": str(o.get("repeatRule") or ""),
                 "alert_mode": str(o.get("alertMode") or "RING_AND_SPEAK"),

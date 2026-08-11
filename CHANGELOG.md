@@ -5,6 +5,9 @@
 First release.
 
 ### Added
+- Tags replace lists, matching the app: home shows everything coming up in
+  time order with tag filtering; sync and export carry tags (v1 files still
+  import, list names become tags).
 - Full web UI for reminder lists and reminders, installable as a PWA.
 - In-browser alerts: tone + spoken reminders (speech synthesis) on open
   pages, web push notifications otherwise.

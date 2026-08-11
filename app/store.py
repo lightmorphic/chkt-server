@@ -6,9 +6,8 @@ from datetime import datetime
 from . import db
 from .repeat_rules import next_after
 
-LIST_FIELDS = ("id", "name", "position", "updated_at", "deleted_at")
 REMINDER_FIELDS = (
-    "id", "list_id", "title", "notes", "due_at", "repeat_rule", "alert_mode",
+    "id", "tags", "title", "notes", "due_at", "repeat_rule", "alert_mode",
     "pre_tone", "enabled", "vibrate", "respect_dnd", "nag_interval_minutes",
     "nag_stop_after_minutes", "nag_started_at", "delete_after_dismissed",
     "snoozed_until", "location_trigger", "latitude",
@@ -16,33 +15,31 @@ REMINDER_FIELDS = (
 )
 
 
-def lists(include_deleted=False):
-    q = "SELECT * FROM lists" + ("" if include_deleted else " WHERE deleted_at IS NULL") + " ORDER BY position, name"
+def reminders(include_deleted=False):
+    q = ("SELECT * FROM reminders"
+         + ("" if include_deleted else " WHERE deleted_at IS NULL")
+         + " ORDER BY enabled DESC, due_at IS NULL, COALESCE(snoozed_until, due_at)")
     with db.connect() as conn:
         return [dict(r) for r in conn.execute(q).fetchall()]
 
 
-def reminders_for(list_id):
-    with db.connect() as conn:
-        return [dict(r) for r in conn.execute(
-            "SELECT * FROM reminders WHERE list_id = ? AND deleted_at IS NULL "
-            "ORDER BY due_at IS NULL, due_at", (list_id,)).fetchall()]
+def tag_list(reminder):
+    return [t.strip() for t in (reminder.get("tags") or "").split(",") if t.strip()]
+
+
+def all_tags():
+    seen = []
+    for r in reminders():
+        for t in tag_list(r):
+            if t not in seen:
+                seen.append(t)
+    return sorted(seen)
 
 
 def get_reminder(reminder_id):
     with db.connect() as conn:
         row = conn.execute("SELECT * FROM reminders WHERE id = ?", (reminder_id,)).fetchone()
         return dict(row) if row else None
-
-
-def upsert_list(record: dict):
-    with db.connect() as conn:
-        conn.execute(
-            "INSERT INTO lists (id, name, position, updated_at, deleted_at) VALUES (?,?,?,?,?) "
-            "ON CONFLICT(id) DO UPDATE SET name=excluded.name, position=excluded.position, "
-            "updated_at=excluded.updated_at, deleted_at=excluded.deleted_at",
-            tuple(record.get(f) for f in LIST_FIELDS),
-        )
 
 
 def upsert_reminder(record: dict):
@@ -59,15 +56,11 @@ def upsert_reminder(record: dict):
 
 
 def soft_delete(table: str, record_id: str):
-    assert table in ("lists", "reminders")
+    assert table == "reminders"
     now = db.now_millis()
     with db.connect() as conn:
         conn.execute(f"UPDATE {table} SET deleted_at = ?, updated_at = ? WHERE id = ?",
                      (now, now, record_id))
-        if table == "lists":
-            conn.execute(
-                "UPDATE reminders SET deleted_at = ?, updated_at = ? WHERE list_id = ? AND deleted_at IS NULL",
-                (now, now, record_id))
 
 
 def add_log(reminder_id: str, due_at: int, action: str):
@@ -178,8 +171,6 @@ def mark_fired(reminder_id: str, due_at: int):
 def changed_since(since: int):
     with db.connect() as conn:
         return {
-            "lists": [dict(r) for r in conn.execute(
-                "SELECT * FROM lists WHERE updated_at > ?", (since,)).fetchall()],
             "reminders": [dict(r) for r in conn.execute(
                 "SELECT * FROM reminders WHERE updated_at > ?", (since,)).fetchall()],
             "logs": [dict(r) for r in conn.execute(

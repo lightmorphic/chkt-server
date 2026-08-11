@@ -72,14 +72,6 @@ def setup():
                     "INSERT INTO auth (id, username, password_hash, created_at) VALUES (1, ?, ?, ?)",
                     (username, generate_password_hash(password, method="scrypt"), db.now_millis()),
                 )
-                # Same first-run behaviour as the app: start with one list.
-                count = conn.execute(
-                    "SELECT COUNT(*) c FROM lists WHERE deleted_at IS NULL").fetchone()["c"]
-                if count == 0:
-                    conn.execute(
-                        "INSERT INTO lists (id, name, position, updated_at) VALUES (?, 'Reminders', 0, ?)",
-                        (db.new_id(), db.now_millis()),
-                    )
             session.clear()
             session["user"] = username
             return redirect(url_for("views.home"))

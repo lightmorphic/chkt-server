@@ -12,14 +12,13 @@
   <label for="f-notes">Notes (also spoken)</label>
   <textarea id="f-notes" name="notes">{{ reminder.notes if reminder else '' }}</textarea>
 
-  <label for="f-list">List</label>
-  <select id="f-list" name="list_id">
-    {% for l in lists %}
-    <option value="{{ l.id }}"
-      {% if (reminder and reminder.list_id == l.id) or (not reminder and preset_list == l.id) %}selected{% endif %}>
-      {{ l.name }}</option>
-    {% endfor %}
-  </select>
+  <label for="f-tags">Tags, separated by commas (optional)</label>
+  <input id="f-tags" name="tags"
+         value="{{ reminder.tags if reminder else preset_tag }}"
+         placeholder="home, chores">
+  {% if known_tags %}
+  <p class="hint">Existing tags: {% for t in known_tags %}#{{ t }} {% endfor %}</p>
+  {% endif %}
 
   <label for="f-due">When</label>
   <input id="f-due" type="datetime-local" name="due" value="{{ due_local }}">

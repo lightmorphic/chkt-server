@@ -1,82 +1,53 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Reminders</h1>
+<h1>Coming up</h1>
 
-<div class="list-grid">
-  {% for list in lists %}
-  <section class="panel" aria-label="{{ list.name }}">
-    <div class="list-head">
-      <h2>{{ list.name }}</h2>
-      <details>
-        <summary class="icon-btn" aria-label="Rename {{ list.name }}" title="Rename">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M4 20 L8 19 L19 8 L16 5 L5 16 Z"/>
-          </svg>
-        </summary>
-        <form method="post" action="{{ url_for('views.list_rename', list_id=list.id) }}" class="row">
-          <input type="hidden" name="csrf" value="{{ csrf }}">
-          <input name="name" value="{{ list.name }}" aria-label="New list name">
-          <button type="submit">Save</button>
-        </form>
-      </details>
-      <form method="post" action="{{ url_for('views.list_delete', list_id=list.id) }}">
-        <input type="hidden" name="csrf" value="{{ csrf }}">
-        <button class="icon-btn" type="submit" data-confirm
-                aria-label="Delete list {{ list.name }}"
-                title="Delete this list and its reminders, click again to confirm">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M5 7h14M9 7V4h6v3M7 7l1 13h8l1-13"/>
-          </svg>
-        </button>
-      </form>
+{% if tags %}
+<nav aria-label="Filter by tag" style="display:flex;gap:0.5rem;flex-wrap:wrap">
+  <a class="btn{% if not active_tag %} btn-primary{% endif %}" href="{{ url_for('views.home') }}">All</a>
+  {% for t in tags %}
+  <a class="btn{% if active_tag == t %} btn-primary{% endif %}" href="{{ url_for('views.home', tag=t) }}">#{{ t }}</a>
+  {% endfor %}
+</nav>
+{% endif %}
+
+<section class="panel">
+  {% for r in reminders %}
+  <div class="reminder-row">
+    <div class="body">
+      <div class="title"><a href="{{ url_for('views.reminder_edit', reminder_id=r.id) }}">{{ r.title }}</a>
+        {% if not r.enabled %}<span class="badge">off</span>{% endif %}</div>
+      {% if describe(r) %}<div class="when">{{ describe(r) }}</div>{% endif %}
+      {% if tag_list(r) %}
+      <div class="when">{% for t in tag_list(r) %}<a href="{{ url_for('views.home', tag=t) }}">#{{ t }}</a> {% endfor %}</div>
+      {% endif %}
     </div>
-
-    {% for r in reminders[list.id] %}
-    <div class="reminder-row">
-      <div class="body">
-        <div class="title"><a href="{{ url_for('views.reminder_edit', reminder_id=r.id) }}">{{ r.title }}</a></div>
-        {% if describe(r) %}<div class="when">{{ describe(r) }}</div>{% endif %}
-      </div>
-      <form method="post" action="{{ url_for('views.reminder_done', reminder_id=r.id) }}">
-        <input type="hidden" name="csrf" value="{{ csrf }}">
-        <button class="icon-btn" type="submit" aria-label="Mark {{ r.title }} done" title="Done">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M5 13 L10 18 L19 6"/>
-          </svg>
-        </button>
-      </form>
-      <form method="post" action="{{ url_for('views.reminder_delete', reminder_id=r.id) }}">
-        <input type="hidden" name="csrf" value="{{ csrf }}">
-        <button class="icon-btn" type="submit" data-confirm
-                aria-label="Delete {{ r.title }}" title="Delete, click again to confirm">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M5 7h14M9 7V4h6v3M7 7l1 13h8l1-13"/>
-          </svg>
-        </button>
-      </form>
-    </div>
-    {% else %}
-    <p class="hint">Nothing here yet.</p>
-    {% endfor %}
-
-    <p style="margin-bottom:0; margin-top:0.75rem">
-      <a class="btn" href="{{ url_for('views.reminder_edit', list=list.id) }}">Add reminder</a>
-    </p>
-  </section>
+    <form method="post" action="{{ url_for('views.reminder_done', reminder_id=r.id) }}">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <button class="icon-btn" type="submit" aria-label="Mark {{ r.title }} done" title="Done">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M5 13 L10 18 L19 6"/>
+        </svg>
+      </button>
+    </form>
+    <form method="post" action="{{ url_for('views.reminder_delete', reminder_id=r.id) }}">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <button class="icon-btn" type="submit" data-confirm
+              aria-label="Delete {{ r.title }}" title="Delete, click again to confirm">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M5 7h14M9 7V4h6v3M7 7l1 13h8l1-13"/>
+        </svg>
+      </button>
+    </form>
+  </div>
+  {% else %}
+  <p class="hint">Nothing coming up{% if active_tag %} under #{{ active_tag }}{% endif %}. Add a reminder and it appears here in time order.</p>
   {% endfor %}
 
-  <section class="panel">
-    <h2>New list</h2>
-    <form method="post" action="{{ url_for('views.list_add') }}">
-      <input type="hidden" name="csrf" value="{{ csrf }}">
-      <label for="new-list-name">List name</label>
-      <input id="new-list-name" name="name" required>
-      <p style="margin-bottom:0"><button class="btn-primary" type="submit">Create list</button></p>
-    </form>
-  </section>
-</div>
+  <p style="margin-bottom:0; margin-top:0.75rem">
+    <a class="btn btn-primary" href="{{ url_for('views.reminder_edit', tag=active_tag or none) }}">Add reminder</a>
+  </p>
+</section>
 {% endblock %}
