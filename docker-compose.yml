@@ -9,6 +9,9 @@ services:
       # The one and only secret. Set it once in .env next to this file:
       #   SECRET_KEY=<output of: python3 -c "import secrets; print(secrets.token_urlsafe(48))">
       - SECRET_KEY=${SECRET_KEY}
+      # Set to 1 in .env when serving plain HTTP inside a trusted network
+      # (e.g. Tailscale); browsers refuse Secure cookies over HTTP.
+      - CHKT_INSECURE_COOKIES=${CHKT_INSECURE_COOKIES:-0}
     volumes:
       - ./data:/data
     healthcheck:
