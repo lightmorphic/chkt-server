@@ -1,9 +1,9 @@
-# Chkt Server
+# CHKT Server
 
-The self-hosted companion to [Chkt](https://github.com/lightmorphic/chkt),
+The self-hosted companion to [CHKT](https://github.com/lightmorphic/chkt),
 the talking reminders app. Run it in Docker on your own server and you get:
 
-- The **full Chkt experience in any browser**, same lists, same reminders,
+- The **full CHKT experience in any browser**, same lists, same reminders,
   installable as an app (PWA), with desktop notifications and spoken alerts.
 - **Sync**, your phone and browser always match. Off by default on the
   phone; one server address + access key turns it on.
@@ -37,7 +37,7 @@ stolen copy of the database alone gives up nothing. **Don't lose or change
 ## Connect your phone
 
 1. Open **Devices**, create an access key, copy it.
-2. In the Chkt app: **Settings → Sync**, enter your server address and the
+2. In the CHKT app: **Settings → Sync**, enter your server address and the
    key, flip sync on, press **Test connection**.
 
 ## Day-to-day

@@ -1,11 +1,11 @@
 {
-  "name": "Chkt",
-  "short_name": "Chkt",
+  "name": "CHKT",
+  "short_name": "CHKT",
   "description": "Talking reminders",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#09090b",
-  "theme_color": "#1B5E4A",
+  "theme_color": "#FBC711",
   "icons": [
     { "src": "/static/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
     { "src": "/static/icon-192.png", "sizes": "192x192", "type": "image/png" },

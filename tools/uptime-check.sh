@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Tiny uptime check for Chkt Server. Run from cron on ANY OTHER machine
+# Tiny uptime check for CHKT Server. Run from cron on ANY OTHER machine
 # (checking a server from itself proves nothing), e.g. every 5 minutes:
 #
 #   */5 * * * * /path/to/uptime-check.sh https://chkt.example.com you@example.com
@@ -15,11 +15,11 @@ STATE="/tmp/chkt-uptime-state"
 if curl -sf --max-time 15 "$URL/healthz" > /dev/null; then
     if [ -f "$STATE" ]; then
         rm -f "$STATE"
-        echo "Chkt is back up at $(date)." | mail -s "Chkt: back up" "$EMAIL"
+        echo "CHKT is back up at $(date)." | mail -s "CHKT: back up" "$EMAIL"
     fi
 else
     if [ ! -f "$STATE" ]; then
         touch "$STATE"
-        echo "Chkt at $URL stopped answering at $(date)." | mail -s "Chkt: DOWN" "$EMAIL"
+        echo "CHKT at $URL stopped answering at $(date)." | mail -s "CHKT: DOWN" "$EMAIL"
     fi
 fi

@@ -56,7 +56,7 @@ def export_json() -> str:
 
 
 def import_json(raw: str, replace: bool = False) -> int:
-    """Merge (or replace) from a Chkt JSON export. Returns reminders imported, -1 on bad file."""
+    """Merge (or replace) from a CHKT JSON export. Returns reminders imported, -1 on bad file."""
     try:
         data = json.loads(raw)
         if data.get("app") != "chkt":
@@ -142,7 +142,7 @@ def _github_push(name: str, path: str):
                 sha = json.load(resp).get("sha")
         except Exception:
             pass
-        body = {"message": f"Chkt backup {name}", "content": content}
+        body = {"message": f"CHKT backup {name}", "content": content}
         if sha:
             body["sha"] = sha
         _request("PUT", body).close()

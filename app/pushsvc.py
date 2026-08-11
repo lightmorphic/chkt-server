@@ -3,7 +3,7 @@
 A background thread wakes every 20 seconds, finds reminders whose time has
 arrived, pushes a notification to every subscribed browser, records the fire,
 and advances repeating reminders, mirroring what the Android app does
-locally. An open Chkt page also polls /web/fired and does the talking
+locally. An open CHKT page also polls /web/fired and does the talking
 (browser speech synthesis) client-side.
 """
 import json

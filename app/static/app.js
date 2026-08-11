@@ -1,4 +1,4 @@
-/* Chkt web app behaviours: inline delete confirm, repeat/location form
+/* CHKT web app behaviours: inline delete confirm, repeat/location form
    panels, PWA + push registration, and the in-page talking alert loop. */
 (function () {
   "use strict";

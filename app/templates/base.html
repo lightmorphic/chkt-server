@@ -3,21 +3,21 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}Chkt{% endblock %}</title>
+  <title>{% block title %}CHKT{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}">
   <link rel="icon" href="{{ url_for('static', filename='icon.svg') }}" type="image/svg+xml">
-  <meta name="theme-color" content="#1B5E4A">
+  <meta name="theme-color" content="#FBC711">
 </head>
 <body data-csrf="{{ csrf if csrf is defined else '' }}">
 <header class="top">
   <a class="logo" href="{{ url_for('views.home') }}">
     <svg width="28" height="28" viewBox="0 0 48 48" aria-hidden="true">
-      <rect x="2" y="2" width="44" height="44" rx="10" fill="#1B5E4A"/>
-      <path d="M14 25 L21 32 L34 16" stroke="#fff" stroke-width="5" fill="none"
+      <rect x="2" y="2" width="44" height="44" rx="10" fill="#FBC711"/>
+      <path d="M14 25 L21 32 L34 16" stroke="#111827" stroke-width="5" fill="none"
             stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
-    Chkt
+    CHKT
   </a>
   <nav aria-label="Main">
     <a href="{{ url_for('views.home') }}" {% if request.endpoint == 'views.home' %}aria-current="page"{% endif %}>Reminders</a>

@@ -1,4 +1,4 @@
-# Chkt Server runbook
+# CHKT Server runbook
 
 Plain-language instructions for looking after the server. Commands run in
 the `chkt-server` folder on the machine that hosts it.

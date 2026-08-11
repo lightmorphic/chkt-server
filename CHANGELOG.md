@@ -11,7 +11,7 @@ First release.
 - Full web UI for reminder lists and reminders, installable as a PWA.
 - In-browser alerts: tone + spoken reminders (speech synthesis) on open
   pages, web push notifications otherwise.
-- Sync API for the Chkt Android app: newest-wins merge, deletion
+- Sync API for the CHKT Android app: newest-wins merge, deletion
   tombstones, append-only completion logs, per-device revocable access keys.
 - Server-side due-reminder engine mirroring the app's repeat rules.
 - Single-account auth: scrypt passwords, optional TOTP 2FA, hardened

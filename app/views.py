@@ -142,7 +142,7 @@ def settings_page():
 @login_required
 def settings_test_email():
     _csrf_or_400()
-    ok, message = send_email("Chkt test message", "If you can read this, Chkt's email settings work.")
+    ok, message = send_email("CHKT test message", "If you can read this, CHKT's email settings work.")
     return render_template("fragment_message.html", message=message, ok=ok)
 
 
@@ -170,7 +170,7 @@ def settings_2fa():
     if action == "start":
         secret = pyotp.random_base32()
         session["totp_pending"] = secret
-        uri = pyotp.TOTP(secret).provisioning_uri(name="chkt", issuer_name="Chkt Server")
+        uri = pyotp.TOTP(secret).provisioning_uri(name="chkt", issuer_name="CHKT Server")
         return render_template("twofa_confirm.html", secret=secret, uri=uri, csrf=csrf_token())
     if action == "confirm":
         secret = session.get("totp_pending", "")
@@ -179,7 +179,7 @@ def settings_2fa():
             setting_put("totp_secret", secret)
             session.pop("totp_pending", None)
             return redirect(url_for("views.settings_page"))
-        uri = pyotp.TOTP(secret).provisioning_uri(name="chkt", issuer_name="Chkt Server") if secret else ""
+        uri = pyotp.TOTP(secret).provisioning_uri(name="chkt", issuer_name="CHKT Server") if secret else ""
         return render_template("twofa_confirm.html", secret=secret, uri=uri,
                                error="That code didn't match, try again.", csrf=csrf_token())
     if action == "disable":
@@ -215,7 +215,7 @@ def export_json_route():
 @bp.get("/export.md")
 @login_required
 def export_md():
-    lines = ["# Chkt reminders", ""]
+    lines = ["# CHKT reminders", ""]
     for r in store.reminders():
         entry = f"- [ ] **{r['title']}**"
         described = _describe(r)
@@ -227,7 +227,7 @@ def export_md():
         lines.append(entry)
         if r["notes"]:
             lines.append(f"  {r['notes']}")
-    body = "\n".join(lines) + f"\n\n_Exported {datetime.now():%Y-%m-%d %H:%M} by Chkt._\n"
+    body = "\n".join(lines) + f"\n\n_Exported {datetime.now():%Y-%m-%d %H:%M} by CHKT._\n"
     return Response(body, mimetype="text/markdown",
                     headers={"Content-Disposition": "attachment; filename=chkt-export.md"})
 
@@ -250,7 +250,7 @@ def import_route():
     count = backup.import_json(f.read().decode("utf-8", "replace"), replace=replace)
     if count < 0:
         return render_template("fragment_message.html",
-                               message="That doesn't look like a Chkt JSON export.", ok=False)
+                               message="That doesn't look like a CHKT JSON export.", ok=False)
     return render_template("fragment_message.html",
                            message=f"Imported {count} reminders.", ok=True)
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Deploy Chkt Server to the VPS. One command: ./deploy.sh
+# Deploy CHKT Server to the VPS. One command: ./deploy.sh
 #
 # Expects an SSH host alias "chkt-deploy" in ~/.ssh/config pointing at the
 # server (LM002, 77.74.199.121) with its own deploy key, e.g.:
