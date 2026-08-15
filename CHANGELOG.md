@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.1.0]
+
+### Added
+- Quiet hours: a do-not-disturb schedule for CHKT itself. Reminders still
+  fire and appear during the window, they just don't ring, speak, or
+  vibrate (push notifications arrive silently too).
+- Add a reminder by voice on the new-reminder form (Web Speech API), a
+  direct match for the app's tap-to-record widget and the same structured
+  phrases ("remind me at 2pm to feed the cat"). Runs entirely client-side.
+- Per-reminder vibration now actually vibrates supporting browsers when an
+  alert fires in an open tab (previously stored and synced but unused).
+- Zero-config Docker install: CHKT now generates and keeps its own secret
+  key in the data volume if one isn't supplied, so `docker compose up -d
+  --build` alone is enough to try it.
+- Optional `docker-compose.https.yml` + `Caddyfile.example` for a public
+  install with automatic HTTPS on a real domain.
+- A proper marketing/install page (`docs/index.html`, GitHub Pages).
+
 ## [1.0.0] - unreleased
 
 First release.

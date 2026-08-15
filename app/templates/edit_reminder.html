@@ -8,6 +8,13 @@
 
   <label for="f-title">What to remind you about</label>
   <input id="f-title" name="title" required value="{{ reminder.title if reminder else '' }}">
+  {% if not reminder %}
+  <p style="margin:0.5rem 0">
+    <button type="button" class="btn" id="voice-add">Add by voice</button>
+  </p>
+  <p class="hint" id="voice-status" hidden></p>
+  <p class="hint">Say something like "remind me at 2pm to feed the cat" and CHKT fills the form in below, check it and save. Needs Chrome or Edge; nothing is sent anywhere until you save.</p>
+  {% endif %}
 
   <label for="f-notes">Notes (also spoken)</label>
   <textarea id="f-notes" name="notes">{{ reminder.notes if reminder else '' }}</textarea>

@@ -77,9 +77,16 @@ CREATE TABLE IF NOT EXISTS fired (
     reminder_id TEXT NOT NULL,
     due_at INTEGER NOT NULL,
     fired_at INTEGER NOT NULL,
+    quiet INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (reminder_id, due_at)
 );
 """
+
+# Additive migrations for databases created before a column existed. Each is
+# safe to re-run: SQLite rejects a duplicate column and we just ignore that.
+MIGRATIONS = [
+    "ALTER TABLE fired ADD COLUMN quiet INTEGER NOT NULL DEFAULT 0",
+]
 
 
 def now_millis():
@@ -113,3 +120,8 @@ def connect():
 def init_db():
     with connect() as conn:
         conn.executescript(SCHEMA)
+        for statement in MIGRATIONS:
+            try:
+                conn.execute(statement)
+            except sqlite3.OperationalError:
+                pass  # already applied

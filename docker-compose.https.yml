@@ -1,0 +1,35 @@
+# Optional add-on for putting CHKT on the public internet with a real
+# domain and automatic HTTPS (Caddy gets and renews the certificate itself,
+# no manual TLS setup). Use alongside the base file, not instead of it:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.https.yml up -d --build
+#
+# Before running: edit Caddyfile and put your domain in it, and point that
+# domain's DNS A record at this server first (Caddy needs to be reachable
+# on the internet to get a certificate).
+#
+# Port 8321 stays reachable directly too (Compose adds to the base file's
+# ports rather than replacing them). To close it off and force everything
+# through Caddy, remove the "ports" line from docker-compose.yml.
+services:
+  chkt:
+    environment:
+      - CHKT_INSECURE_COOKIES=0
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: chkt-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - chkt
+
+volumes:
+  caddy_data:
+  caddy_config:

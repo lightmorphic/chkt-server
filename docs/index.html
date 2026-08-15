@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CHKT Server — talking reminders, self-hosted</title>
+<meta name="description" content="The self-hosted browser companion to CHKT: every feature of the Android app, in your own Docker container, synced with your phone.">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#FBC711">
+<style>
+@font-face {
+  font-family: "Manrope";
+  src: url("fonts/Manrope.woff2") format("woff2");
+  font-weight: 200 800;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: light dark;
+  --bg: #ffffff;  --fg: #09090b;
+  --panel: #ffffff;  --panel-border: rgba(24, 24, 40, 0.10);
+  --border: #e4e4e7;  --muted: #f4f4f5;  --muted-fg: #71717a;
+  --shadow-panel: 0 1px 2px rgba(24,24,40,.05), 0 8px 24px -16px rgba(24,24,40,.18);
+  --accent: #fbc711;  --accent-hover: #ddaf0f;  --on-accent: #645007;
+  --accent-container: #fff8e2;  --on-accent-container: #5f4c06;
+  --brand-navy: #111827;
+  --link: #1b74bc;
+  --radius: 0.875rem;
+  --panel-radius: 1.375rem;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #09090b;  --fg: #fafafa;
+    --panel: #1b1d29;  --panel-border: rgba(255,255,255,.09);
+    --border: #27272a;  --muted: #1c1c1f;  --muted-fg: #a1a1aa;
+    --shadow-panel: 0 1px 2px rgba(0,0,0,.35), 0 8px 24px -16px rgba(0,0,0,.6);
+    --accent-container: #4b3c05;  --on-accent-container: #fde694;
+    --link: #2295f1;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #09090b;  --fg: #fafafa;
+  --panel: #1b1d29;  --panel-border: rgba(255,255,255,.09);
+  --border: #27272a;  --muted: #1c1c1f;  --muted-fg: #a1a1aa;
+  --shadow-panel: 0 1px 2px rgba(0,0,0,.35), 0 8px 24px -16px rgba(0,0,0,.6);
+  --accent-container: #4b3c05;  --on-accent-container: #fde694;
+  --link: #2295f1;
+}
+:root[data-theme="light"] {
+  --bg: #ffffff;  --fg: #09090b;
+  --panel: #ffffff;  --panel-border: rgba(24, 24, 40, 0.10);
+  --border: #e4e4e7;  --muted: #f4f4f5;  --muted-fg: #71717a;
+  --shadow-panel: 0 1px 2px rgba(24,24,40,.05), 0 8px 24px -16px rgba(24,24,40,.18);
+  --accent-container: #fff8e2;  --on-accent-container: #5f4c06;
+  --link: #1b74bc;
+}
+
+* { box-sizing: border-box; }
+html { overflow-x: hidden; }
+body {
+  margin: 0;
+  font-family: "Manrope", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+main { max-width: 68rem; margin: 0 auto; padding: 0 1.25rem; }
+section { padding: 3.5rem 0; }
+h1, h2, h3 { line-height: 1.15; letter-spacing: -0.02em; margin: 0 0 0.75rem; }
+h1 { font-size: clamp(2rem, 5vw, 3rem); font-weight: 700; }
+h2 { font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 700; letter-spacing: -0.01em; }
+h3 { font-size: 1.0625rem; font-weight: 600; margin-bottom: 0.4rem; }
+p { max-width: 62ch; }
+a { color: var(--link); }
+code, pre { font-family: ui-monospace, "SF Mono", Consolas, monospace; }
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--panel-radius);
+  box-shadow: var(--shadow-panel);
+}
+
+header.top {
+  display: flex; align-items: center; gap: 0.75rem;
+  max-width: 68rem; margin: 0 auto; padding: 1.25rem 1.25rem 0;
+}
+header.top .logo { display: flex; align-items: center; gap: 0.6rem; font-weight: 700; font-size: 1.25rem; text-decoration: none; color: var(--fg); }
+header.top .logo svg { display: block; border-radius: 6px; }
+header.top nav { margin-left: auto; display: flex; gap: 1.5rem; align-items: center; }
+header.top nav a { text-decoration: none; color: var(--muted-fg); font-weight: 600; font-size: 0.9375rem; }
+header.top nav a:hover { color: var(--fg); }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  font: inherit; font-weight: 600; font-size: 0.9375rem;
+  border: 1px solid var(--border);
+  background: var(--muted); color: var(--fg);
+  border-radius: var(--radius);
+  padding: 0.7rem 1.25rem;
+  text-decoration: none;
+}
+.btn-primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+
+.hero { padding-top: 2.5rem; padding-bottom: 2.5rem; }
+.hero p.lede { font-size: 1.125rem; color: var(--muted-fg); max-width: 46ch; }
+.hero .ctas { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1.5rem; }
+.badge-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1.25rem; }
+.badge {
+  font-size: 0.8125rem; font-weight: 600; color: var(--muted-fg);
+  border: 1px solid var(--border); border-radius: 999px; padding: 0.25rem 0.75rem;
+}
+
+/* Flow diagram: three plain boxes, no images */
+.flow { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-top: 2.5rem; }
+.flow .node {
+  flex: 1; min-width: 12rem; padding: 1.25rem;
+  text-align: center; font-weight: 600;
+}
+.flow .node .sub { font-weight: 400; font-size: 0.8125rem; color: var(--muted-fg); margin-top: 0.25rem; }
+.flow .arrow { color: var(--muted-fg); font-size: 1.5rem; flex: 0 0 auto; }
+@media (max-width: 720px) { .flow .arrow { transform: rotate(90deg); } }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.25rem;
+  margin-top: 2rem;
+}
+.grid .panel { padding: 1.5rem; }
+.grid .icon {
+  width: 2.25rem; height: 2.25rem; border-radius: 0.65rem;
+  background: var(--accent-container); color: var(--on-accent-container);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 0.9rem;
+}
+.grid p { font-size: 0.9375rem; color: var(--muted-fg); margin: 0; }
+
+.install .panel { padding: 2rem; }
+.install pre {
+  background: var(--muted); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 1rem 1.25rem; overflow-x: auto; font-size: 0.875rem; line-height: 1.7;
+}
+.install .steps { display: grid; gap: 1.25rem; margin-top: 1.5rem; }
+@media (min-width: 800px) { .install .steps { grid-template-columns: 1fr 1fr; } }
+
+.privacy { display: grid; gap: 1.25rem; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-top: 1.5rem; }
+.privacy .panel { padding: 1.5rem; }
+
+footer { border-top: 1px solid var(--border); padding: 2.5rem 0; margin-top: 1rem; }
+footer .row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+footer nav { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+footer nav a { text-decoration: none; font-weight: 600; font-size: 0.9375rem; }
+footer .fine { color: var(--muted-fg); font-size: 0.8125rem; margin-top: 1rem; }
+
+:where(a, button):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <a class="logo" href="#top">
+    <svg width="28" height="28" viewBox="0 0 48 48" aria-hidden="true">
+      <rect x="2" y="2" width="44" height="44" rx="10" fill="#FBC711"/>
+      <path d="M14 25 L21 32 L34 16" stroke="#111827" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    CHKT Server
+  </a>
+  <nav aria-label="Main">
+    <a href="#features">Features</a>
+    <a href="#install">Install</a>
+    <a href="https://github.com/lightmorphic/chkt-server">GitHub</a>
+  </nav>
+</header>
+
+<main id="top">
+
+<section class="hero">
+  <h1>Reminders that talk, wherever you are.</h1>
+  <p class="lede">
+    CHKT Server is the self-hosted browser companion to
+    <a href="https://github.com/lightmorphic/chkt">CHKT</a>, the talking
+    reminders app for Android. Run it on your own hardware and every
+    feature of the phone app is there in your browser too, kept in step
+    by two-way sync.
+  </p>
+  <div class="ctas">
+    <a class="btn btn-primary" href="#install">Install it</a>
+    <a class="btn" href="https://github.com/lightmorphic/chkt-server">View on GitHub</a>
+  </div>
+  <div class="badge-row">
+    <span class="badge">GPL-3.0</span>
+    <span class="badge">Docker, one command</span>
+    <span class="badge">No tracking, no accounts with us</span>
+    <span class="badge">Your data stays on your server</span>
+  </div>
+
+  <div class="flow">
+    <div class="panel node">
+      CHKT (Android)
+      <div class="sub">Rings, speaks, works fully offline</div>
+    </div>
+    <div class="arrow" aria-hidden="true">⇄</div>
+    <div class="panel node">
+      CHKT Server
+      <div class="sub">Your Docker container, your data</div>
+    </div>
+    <div class="arrow" aria-hidden="true">⇄</div>
+    <div class="panel node">
+      Any browser
+      <div class="sub">Installable, works offline too</div>
+    </div>
+  </div>
+</section>
+
+<section id="features">
+  <h2>Everything the app does. Same reminders, same voice.</h2>
+  <p style="color:var(--muted-fg)">
+    Sync is optional and off by default on the phone. Turn it on and both
+    sides stay matched, edit a reminder anywhere and it catches up
+    everywhere else.
+  </p>
+
+  <div class="grid">
+    <div class="panel">
+      <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg></div>
+      <h3>Everything coming up, in order</h3>
+      <p>The home screen shows every reminder in time order with tag chips to filter, no folders to dig through.</p>
+    </div>
+    <div class="panel">
+      <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 6v6l4 2"/><circle cx="12" cy="12" r="9"/></svg></div>
+      <h3>Flexible repeats</h3>
+      <p>Daily, weekly on chosen days, monthly (day or last day), yearly, or any custom interval down to the minute.</p>
+    </div>
+    <div class="panel">
+      <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19 9a5 5 0 010 6"/></svg></div>
+      <h3>Ring, then speak</h3>
+      <p>Four alert styles per reminder, ring and speak, ring only, speak only, or a plain notification, with an optional tone before the speech.</p>
+    </div>
+    <div class="panel">
+      <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div>
+      <h3>Keeps reminding you</h3>
+      <p>Set it to re-alert every 1, 2, or 5 minutes until you answer, with an automatic stop from 15 minutes to 2 hours so it never nags forever.</p>
+    </div>
+    <div class="panel">
+      <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h7"/></svg></div>
+      <h3>Quiet hours</h3>
+      <p>A do-not-disturb schedule for CHKT itself. Reminders still fire and appear, they just don't ring, speak, or vibrate during the window you set.</p>
+    </div>
+    <div class="panel">
+      <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 6v6l4 2"/><circle cx="12" cy="12" r="9"/></svg></div>
+      <h3>Snooze, decided in the moment</h3>
+      <p>The snooze length is chosen when the alert happens, from 10 minutes to a day, never locked in ahead of time.</p>
+    </div>
+    <div class="panel">
+      <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4"/></svg></div>
+      <h3>Add a reminder by voice</h3>
+      <p>Say "remind me at 2pm to feed the cat" and the form fills itself in. Runs entirely in your browser; nothing is sent anywhere until you save.</p>
+    </div>
+    <div class="panel">
+      <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 21s-7-4.5-7-11a7 7 0 0114 0c0 6.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></div>
+      <h3>Location reminders</h3>
+      <p>Trigger when the phone arrives at or leaves a place. Set the location from the app, or from your browser with one click.</p>
+    </div>
+    <div class="panel">
+      <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 21h8M12 18v3"/></svg></div>
+      <h3>Install it like an app</h3>
+      <p>A proper PWA, add it to your home screen or dock, with desktop push notifications so it can reach you even when the tab is closed.</p>
+    </div>
+    <div class="panel">
+      <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 8v13H3V8M1 3h22v5H1z"/><path d="M10 12h4"/></svg></div>
+      <h3>Backups that leave the building</h3>
+      <p>Daily snapshots kept locally, with an optional push to your own private GitHub repository so losing the server loses nothing.</p>
+    </div>
+    <div class="panel">
+      <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 21h14"/></svg></div>
+      <h3>Plain-file export</h3>
+      <p>Export everything as JSON (round-trips back in) or Markdown to read. Your data is yours, in a format anyone can open.</p>
+    </div>
+    <div class="panel">
+      <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div>
+      <h3>Two-factor sign-in</h3>
+      <p>Optional TOTP with any authenticator app, on top of a scrypt-hashed password and hardened session cookies.</p>
+    </div>
+    <div class="panel">
+      <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="2" width="16" height="20" rx="2"/><circle cx="12" cy="18" r="0.5" fill="currentColor"/></svg></div>
+      <h3>Per-device access keys</h3>
+      <p>Every phone gets its own sync key from the Devices page, revoke one any time without touching the others.</p>
+    </div>
+    <div class="panel">
+      <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4v5h5M20 20v-5h-5"/><path d="M4 9a8 8 0 0113.5-4.5M20 15a8 8 0 01-13.5 4.5"/></svg></div>
+      <h3>Tells you when there's an update</h3>
+      <p>A quiet notice on the Settings page when a newer release is out on GitHub, checked at most once a day.</p>
+    </div>
+    <div class="panel">
+      <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19V9M12 19V5M20 19v-7"/></svg></div>
+      <h3>Completion stats</h3>
+      <p>A 30-day view of what got done, missed, or snoozed, and your completion rate.</p>
+    </div>
+  </div>
+</section>
+
+<section id="install" class="install">
+  <div class="panel">
+    <h2 style="margin-bottom:0.5rem">One command to install</h2>
+    <p style="color:var(--muted-fg)">Requires Docker with the compose plugin. No configuration file needed to try it, CHKT generates and keeps its own secret key.</p>
+    <pre><code>git clone https://github.com/lightmorphic/chkt-server
+cd chkt-server
+docker compose up -d --build</code></pre>
+    <p style="color:var(--muted-fg)">Open <code>http://&lt;this-machine&gt;:8321</code> and the first visit creates your account.</p>
+
+    <div class="steps">
+      <div>
+        <h3>On your own network</h3>
+        <p style="max-width:none">The command above is enough for a home network or a private network like Tailscale. Everything, email alerts, offsite backups, quiet hours, is configured afterwards on the Settings page.</p>
+      </div>
+      <div>
+        <h3>On the public internet</h3>
+        <p style="max-width:none">Add the bundled Caddy setup for a real domain with automatic HTTPS, no certificates to manage by hand. Full steps are in the <a href="https://github.com/lightmorphic/chkt-server#readme">README</a>.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="privacy">
+  <div class="panel">
+    <h3>Your server, your data</h3>
+    <p>Everything lives in your own SQLite database on your own machine. No account with us, nothing phones out except what you explicitly configure (email, offsite backup).</p>
+  </div>
+  <div class="panel">
+    <h3>Encrypted at rest</h3>
+    <p>Every credential you enter is encrypted with a key derived from your server's secret key. A stolen copy of the database alone gives up nothing.</p>
+  </div>
+  <div class="panel">
+    <h3>Free, forever</h3>
+    <p>GPL-3.0. Fork it, read it, run it unmodified, no catch.</p>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <main style="padding:0">
+    <div class="row">
+      <nav aria-label="Footer">
+        <a href="https://github.com/lightmorphic/chkt">CHKT for Android</a>
+        <a href="https://github.com/lightmorphic/chkt-server">CHKT Server on GitHub</a>
+        <a href="https://github.com/lightmorphic/chkt-server/blob/main/LICENSE">Licence</a>
+      </nav>
+      <span style="color:var(--muted-fg); font-size:0.875rem">CHKT Server</span>
+    </div>
+    <p class="fine">GPL-3.0 licensed. Not affiliated with any app store. This page makes no requests beyond itself, no cookies, no analytics.</p>
+  </main>
+</footer>
+
+</body>
+</html>

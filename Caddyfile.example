@@ -1,0 +1,7 @@
+# Copy this to "Caddyfile" and replace the domain with your own, then run
+# with docker-compose.https.yml (see its top comment). Caddy handles the
+# certificate automatically — nothing else to configure.
+
+chkt.example.com {
+    reverse_proxy chkt:8321
+}

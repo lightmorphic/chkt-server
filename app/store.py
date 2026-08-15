@@ -136,11 +136,11 @@ def last_fired_at(reminder_id: str):
         return row["m"]
 
 
-def touch_fired(reminder_id: str, due_at: int):
+def touch_fired(reminder_id: str, due_at: int, quiet: bool = False):
     """Refresh the fire timestamp for a nag re-alert so pollers re-announce it."""
     with db.connect() as conn:
-        conn.execute("UPDATE fired SET fired_at = ? WHERE reminder_id = ? AND due_at = ?",
-                     (db.now_millis(), reminder_id, due_at))
+        conn.execute("UPDATE fired SET fired_at = ?, quiet = ? WHERE reminder_id = ? AND due_at = ?",
+                     (db.now_millis(), 1 if quiet else 0, reminder_id, due_at))
 
 
 def due_now():
@@ -162,10 +162,11 @@ def due_now():
         return out
 
 
-def mark_fired(reminder_id: str, due_at: int):
+def mark_fired(reminder_id: str, due_at: int, quiet: bool = False):
     with db.connect() as conn:
-        conn.execute("INSERT OR IGNORE INTO fired (reminder_id, due_at, fired_at) VALUES (?,?,?)",
-                     (reminder_id, due_at, db.now_millis()))
+        conn.execute(
+            "INSERT OR IGNORE INTO fired (reminder_id, due_at, fired_at, quiet) VALUES (?,?,?,?)",
+            (reminder_id, due_at, db.now_millis(), 1 if quiet else 0))
 
 
 def changed_since(since: int):

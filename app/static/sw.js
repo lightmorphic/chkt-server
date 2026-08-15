@@ -8,6 +8,8 @@ self.addEventListener("push", function (event) {
       icon: "/static/icon-192.png",
       badge: "/static/icon-192.png",
       tag: data.reminderId || "chkt",
+      // Quiet hours: still shown, just no sound/vibration, matching the app.
+      silent: !!data.quiet,
     })
   );
 });

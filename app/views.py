@@ -125,7 +125,16 @@ def settings_page():
         elif section == "github":
             save_form(request.form, ["github_repo", "github_token"])
             message = "GitHub backup settings saved."
+        elif section == "quiet":
+            from .settings_store import set_quiet_hours
+            set_quiet_hours(
+                enabled=bool(request.form.get("quiet_enabled")),
+                start=(request.form.get("quiet_start") or "22:00"),
+                end=(request.form.get("quiet_end") or "07:00"),
+            )
+            message = "Quiet hours saved."
     from .update_check import VERSION, available_update
+    from .settings_store import quiet_hours
     values = {k: setting(k) for k in ("alert_email", "smtp_host", "smtp_port",
                                       "smtp_from", "smtp_username", "github_repo")}
     return render_template(
@@ -134,6 +143,7 @@ def settings_page():
         smtp_password_set=bool(setting("smtp_password")),
         github_token_set=bool(setting("github_token")),
         totp_enabled=bool(setting("totp_secret")),
+        quiet=quiet_hours(),
         outbox=outbox(), csrf=csrf_token(),
     )
 

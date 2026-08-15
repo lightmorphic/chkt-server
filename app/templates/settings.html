@@ -65,6 +65,31 @@ or rerun <code>deploy.sh</code>. Your data is untouched either way.</p>
   </section>
 
   <section class="panel">
+    <h2>Quiet hours</h2>
+    <p class="hint">A do-not-disturb schedule for CHKT itself. Reminders still fire and appear during quiet hours, they just don't ring, speak, or vibrate.</p>
+    <form method="post">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <input type="hidden" name="section" value="quiet">
+      <label style="display:flex;gap:0.5rem;align-items:center;font-weight:400">
+        <input style="width:auto" type="checkbox" name="quiet_enabled" {% if quiet.enabled %}checked{% endif %}>
+        Enabled
+      </label>
+      <div class="row">
+        <div>
+          <label for="s-quiet-start">From</label>
+          <input id="s-quiet-start" type="time" name="quiet_start" value="{{ quiet.start }}">
+        </div>
+        <div>
+          <label for="s-quiet-end">Until</label>
+          <input id="s-quiet-end" type="time" name="quiet_end" value="{{ quiet.end }}">
+        </div>
+      </div>
+      <p class="hint">"From" can be later than "Until", that means overnight (e.g. 22:00 to 07:00).</p>
+      <p style="margin-bottom:0"><button class="btn-primary" type="submit">Save quiet hours</button></p>
+    </form>
+  </section>
+
+  <section class="panel">
     <h2>Two-factor sign-in</h2>
     {% if totp_enabled %}
       <p>✓ 2FA is on. Signing in asks for a code from your authenticator app.</p>

@@ -61,6 +61,162 @@
     });
   }
 
+  /* ---- Voice add: same structured phrases as the app's record widget.
+     ---- Runs entirely in the browser; nothing is sent anywhere until Save. */
+  (function () {
+    var btn = document.getElementById("voice-add");
+    if (!btn) return;
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      btn.disabled = true;
+      btn.title = "Voice input needs a browser with speech recognition (Chrome or Edge).";
+      return;
+    }
+
+    function addDays(d, n) { var r = new Date(d); r.setDate(r.getDate() + n); return r; }
+    function withTime(d, h, m) { var r = new Date(d); r.setHours(h, m, 0, 0); return r; }
+    function nextWeekday(now, targetDow) {
+      var diff = (targetDow - now.getDay() + 7) % 7;
+      return addDays(now, diff === 0 ? 7 : diff);
+    }
+    function extractTitle(raw) {
+      var t = raw.replace(/^to /, "").trim().replace(/\.+$/, "");
+      return t || null;
+    }
+
+    // Mirrors org.chkt.app.domain.PhraseParser exactly: same shapes, same
+    // "next occurrence" rule for a bare hour like "at 10".
+    function parsePhrase(rawInput, now) {
+      var raw = rawInput.trim().toLowerCase();
+      if (raw.indexOf("remind me") === 0) raw = raw.slice(9).trim();
+      if (!raw) return null;
+
+      var repeatKind = "NONE", weekday = null, date = null, time = null, ambiguousHour = false, m;
+      var DOW = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+
+      if ((m = /^every (day|morning|evening|week)\b/.exec(raw))) {
+        repeatKind = m[1] === "week" ? "WEEKLY" : "DAILY";
+        if (repeatKind === "WEEKLY") weekday = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"][now.getDay()];
+        raw = raw.slice(m[0].length).trim();
+      }
+
+      if ((m = /^tomorrow\b/.exec(raw))) {
+        date = addDays(now, 1);
+        raw = raw.slice(m[0].length).trim();
+      }
+      if (!date && (m = /^on (monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/.exec(raw))) {
+        date = nextWeekday(now, DOW.indexOf(m[1]));
+        raw = raw.slice(m[0].length).trim();
+      }
+
+      if ((m = /^in (\d+) (minute|minutes|hour|hours|day|days)\b/.exec(raw))) {
+        var n = parseInt(m[1], 10);
+        var due = new Date(now);
+        if (m[2].indexOf("minute") === 0) due.setMinutes(due.getMinutes() + n);
+        else if (m[2].indexOf("hour") === 0) due.setHours(due.getHours() + n);
+        else due.setDate(due.getDate() + n);
+        due.setSeconds(0, 0);
+        var titleIn = extractTitle(raw.slice(m[0].length).trim());
+        return titleIn ? { title: titleIn, dueAt: due, repeatKind: "NONE" } : null;
+      }
+
+      if ((m = /^at (\d{1,2})(?::(\d{2}))?\s*(am|pm|o'?clock)?\b/.exec(raw))) {
+        var hour = parseInt(m[1], 10);
+        var minute = m[2] ? parseInt(m[2], 10) : 0;
+        if (m[3] === "pm") { if (hour < 12) hour += 12; }
+        else if (m[3] === "am") { if (hour === 12) hour = 0; }
+        else { ambiguousHour = hour >= 1 && hour <= 12; }
+        if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return null;
+        time = { hour: hour % 24, minute: minute };
+        raw = raw.slice(m[0].length).trim();
+      }
+
+      if (!date && (m = /^on (monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/.exec(raw))) {
+        date = nextWeekday(now, DOW.indexOf(m[1]));
+        raw = raw.slice(m[0].length).trim();
+      }
+      if (!date && (m = /^tomorrow\b/.exec(raw))) {
+        date = addDays(now, 1);
+        raw = raw.slice(m[0].length).trim();
+      }
+
+      var title = extractTitle(raw);
+      if (!title || !time) return null;
+
+      if (ambiguousHour && !date) {
+        var base = time.hour % 12;
+        for (var dayOffset = 0; dayOffset <= 1; dayOffset++) {
+          var candidates = [base, base + 12];
+          for (var ci = 0; ci < candidates.length; ci++) {
+            var c = withTime(addDays(now, dayOffset), candidates[ci] % 24, time.minute);
+            if (c > now) return { title: title, dueAt: c, repeatKind: repeatKind, weekday: weekday };
+          }
+        }
+        return null;
+      }
+
+      var due2 = withTime(date || now, time.hour, time.minute);
+      if (due2 <= now) {
+        if (!date) due2 = withTime(addDays(now, 1), time.hour, time.minute);
+        else return null;
+      }
+      return { title: title, dueAt: due2, repeatKind: repeatKind, weekday: weekday };
+    }
+
+    function pad(n) { return (n < 10 ? "0" : "") + n; }
+    function toLocalInputValue(d) {
+      return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) +
+        "T" + pad(d.getHours()) + ":" + pad(d.getMinutes());
+    }
+
+    function applyParsed(p) {
+      document.getElementById("f-title").value = p.title.charAt(0).toUpperCase() + p.title.slice(1);
+      document.getElementById("f-due").value = toLocalInputValue(p.dueAt);
+      var repeatSelect = document.querySelector("[data-repeat-select]");
+      if (repeatSelect) {
+        repeatSelect.value = p.repeatKind;
+        repeatSelect.dispatchEvent(new Event("change"));
+        if (p.repeatKind === "WEEKLY" && p.weekday) {
+          document.querySelectorAll('input[name="weekday"]').forEach(function (cb) {
+            cb.checked = cb.value === p.weekday;
+          });
+        }
+      }
+    }
+
+    var status = document.getElementById("voice-status");
+    var recognizing = false;
+    btn.addEventListener("click", function () {
+      if (recognizing) return;
+      var rec = new SR();
+      rec.lang = "en-US";
+      rec.interimResults = false;
+      rec.maxAlternatives = 1;
+      recognizing = true;
+      btn.textContent = "Listening…";
+      if (status) status.hidden = true;
+      rec.onresult = function (e) {
+        var text = e.results[0][0].transcript;
+        var parsed = parsePhrase(text, new Date());
+        if (status) {
+          status.hidden = false;
+          status.textContent = parsed
+            ? "Heard: \"" + text + "\", filled in below, check and save."
+            : "Heard: \"" + text + "\", couldn't work out a time. Try \"remind me at 2pm to feed the cat\".";
+        }
+        if (parsed) applyParsed(parsed);
+      };
+      rec.onerror = function () {
+        if (status) { status.hidden = false; status.textContent = "Didn't catch that, try again."; }
+      };
+      rec.onend = function () {
+        recognizing = false;
+        btn.textContent = "Add by voice";
+      };
+      rec.start();
+    });
+  })();
+
   /* ---- PWA: register the service worker, offer push. ---- */
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("/static/sw.js").then(function (reg) {
@@ -125,6 +281,11 @@
   }
 
   function announce(item) {
+    // Quiet hours: the reminder still appears (Done/Snooze work as normal),
+    // it just doesn't ring or speak, matching the app's silent channel.
+    if (item.quiet) return;
+    // Vibration API is mobile-browser-only; no-ops harmlessly elsewhere.
+    if (item.vibrate && navigator.vibrate) navigator.vibrate([400, 250, 400, 250, 400]);
     var mode = item.alert_mode || "RING_AND_SPEAK";
     var ring = mode === "RING_AND_SPEAK" || mode === "RING_ONLY";
     var speak = mode === "RING_AND_SPEAK" || mode === "SPEAK_ONLY";

@@ -11,7 +11,7 @@ import threading
 import time
 
 from . import db, store
-from .settings_store import get as setting, put as setting_put
+from .settings_store import get as setting, put as setting_put, quiet_hours_now
 
 _started = False
 
@@ -51,7 +51,7 @@ def add_subscription(subscription: dict):
         )
 
 
-def _push_all(title: str, body: str, reminder_id: str):
+def _push_all(title: str, body: str, reminder_id: str, quiet: bool = False):
     from pywebpush import webpush, WebPushException
 
     private_pem = setting("vapid_private")
@@ -64,7 +64,7 @@ def _push_all(title: str, body: str, reminder_id: str):
         try:
             webpush(
                 subscription_info=json.loads(sub["subscription_json"]),
-                data=json.dumps({"title": title, "body": body, "reminderId": reminder_id}),
+                data=json.dumps({"title": title, "body": body, "reminderId": reminder_id, "quiet": quiet}),
                 vapid_private_key=private_pem,
                 vapid_claims=dict(claims),
             )
@@ -82,7 +82,8 @@ def recently_fired(since_millis: int):
     """Fires newer than `since`, the web page polls this to alert in-page."""
     with db.connect() as conn:
         rows = conn.execute(
-            "SELECT f.reminder_id, f.due_at, f.fired_at, r.title, r.notes, r.alert_mode, r.pre_tone "
+            "SELECT f.reminder_id, f.due_at, f.fired_at, f.quiet, "
+            "r.title, r.notes, r.alert_mode, r.pre_tone, r.vibrate "
             "FROM fired f JOIN reminders r ON r.id = f.reminder_id "
             "WHERE f.fired_at > ? ORDER BY f.fired_at", (since_millis,)).fetchall()
         return [dict(r) for r in rows]
@@ -92,11 +93,14 @@ def _loop():
     while True:
         try:
             now = db.now_millis()
+            # Computed once per tick: same window used for every reminder
+            # that fires in this pass, same as the app checking it once per alert.
+            quiet = quiet_hours_now()
 
             for reminder in store.due_now():
                 fire_at = reminder["snoozed_until"] or reminder["due_at"]
-                store.mark_fired(reminder["id"], fire_at)
-                _push_all(reminder["title"], reminder.get("notes") or "", reminder["id"])
+                store.mark_fired(reminder["id"], fire_at, quiet)
+                _push_all(reminder["title"], reminder.get("notes") or "", reminder["id"], quiet)
                 if reminder.get("nag_interval_minutes"):
                     # Keep the occurrence live and keep reminding until answered.
                     store.set_nag_started(reminder["id"], now)
@@ -113,8 +117,8 @@ def _loop():
                     continue
                 last = store.last_fired_at(reminder["id"]) or started
                 if now - last >= reminder["nag_interval_minutes"] * 60_000:
-                    store.touch_fired(reminder["id"], fire_at)
-                    _push_all(reminder["title"], reminder.get("notes") or "", reminder["id"])
+                    store.touch_fired(reminder["id"], fire_at, quiet)
+                    _push_all(reminder["title"], reminder.get("notes") or "", reminder["id"], quiet)
         except Exception:
             # The engine must never die; next tick retries.
             pass
