@@ -34,6 +34,13 @@ def reminder_json(rid, tags, title, updated_at, **kw):
 class SyncApiTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        # Re-assert (not just at import time): when the whole suite runs via
+        # `discover`, every test module's import-time os.environ write has
+        # already happened by the time any test runs, so whichever file
+        # imports last would otherwise silently win for everyone. Each
+        # class must point CHKT_DB at its own db right before it uses it.
+        os.environ["CHKT_DB"] = os.path.join(_tmp, "test.db")
+        os.environ["CHKT_BACKUP_DIR"] = os.path.join(_tmp, "backups")
         cls.app = create_app()
         cls.client = cls.app.test_client()
         cls.key = new_access_key("test device")

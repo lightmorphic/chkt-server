@@ -15,6 +15,12 @@ from app.settings_store import quiet_hours, quiet_hours_now, set_quiet_hours  # 
 class QuietHoursTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        # See the matching comment in test_sync_api.py: re-assert this
+        # class's own db path here, not just at import time, so running the
+        # whole suite via `discover` can't let another file's import-time
+        # write silently redirect this class at whichever database happened
+        # to be set last.
+        os.environ["CHKT_DB"] = os.path.join(_tmp, "test.db")
         db.init_db()
 
     def test_disabled_is_never_quiet(self):

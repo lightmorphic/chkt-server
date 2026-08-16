@@ -29,10 +29,10 @@
     <caption>Access keys that can sync with this server</caption>
     <tr><th>Device</th><th>Created</th><th>Last sync</th><th></th></tr>
     {% for k in keys %}
-    <tr>
+    <tr data-device-row data-key-id="{{ k.id }}" data-last-used="{{ k.last_used_at or '' }}">
       <td>{{ k.label }}</td>
       <td>{{ (k.created_at // 1000) | datetimeformat }}</td>
-      <td>{{ ((k.last_used_at // 1000) | datetimeformat) if k.last_used_at else 'never' }}</td>
+      <td data-last-sync>{{ ((k.last_used_at // 1000) | datetimeformat) if k.last_used_at else 'never' }}</td>
       <td>
         <form method="post">
           <input type="hidden" name="csrf" value="{{ csrf }}">

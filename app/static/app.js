@@ -217,6 +217,51 @@
     });
   })();
 
+  /* ---- Devices page: live "Last sync" so connecting a phone shows up
+     ---- without a manual refresh. Polls while the tab is visible. ---- */
+  (function () {
+    var rows = document.querySelectorAll("[data-device-row]");
+    if (!rows.length) return;
+
+    var MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    function pad(n) { return (n < 10 ? "0" : "") + n; }
+    function formatMillis(ms) {
+      var d = new Date(ms);
+      return pad(d.getDate()) + " " + MONTHS[d.getMonth()] + " " + d.getFullYear() +
+        ", " + pad(d.getHours()) + ":" + pad(d.getMinutes());
+    }
+
+    function poll() {
+      fetch("/devices/status", { headers: { "X-CSRF": csrf } })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (data) {
+          if (!data) return;
+          var byId = {};
+          (data.keys || []).forEach(function (k) { byId[k.id] = k.last_used_at; });
+          rows.forEach(function (row) {
+            var id = row.dataset.keyId;
+            var now = byId[id];
+            if (now == null) return;
+            var before = row.dataset.lastUsed;
+            if (String(now) === before) return;
+            row.dataset.lastUsed = now;
+            var cell = row.querySelector("[data-last-sync]");
+            if (!cell) return;
+            cell.textContent = formatMillis(now);
+            // A device just connected, including its very first time (was
+            // "never"): a quick flash of the same green tone as a confirmed
+            // connection, then it settles back to normal.
+            cell.classList.add("just-synced");
+            setTimeout(function () { cell.classList.remove("just-synced"); }, 2500);
+          });
+        })
+        .catch(function () { /* offline; try again next tick */ });
+    }
+    setInterval(function () {
+      if (document.visibilityState === "visible") poll();
+    }, 4000);
+  })();
+
   /* ---- PWA: register the service worker, offer push. ---- */
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("/static/sw.js").then(function (reg) {

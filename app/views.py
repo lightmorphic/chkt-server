@@ -213,6 +213,19 @@ def devices():
                            fresh_key=fresh_key, csrf=csrf_token())
 
 
+@bp.get("/devices/status")
+@login_required
+def devices_status():
+    """Polled by the Devices page so a phone connecting shows up live,
+    no manual refresh needed to see it land."""
+    return jsonify({
+        "keys": [
+            {"id": k["id"], "last_used_at": k["last_used_at"]}
+            for k in list_access_keys()
+        ]
+    })
+
+
 # ---- Export / import / restore ----
 
 @bp.get("/export.json")

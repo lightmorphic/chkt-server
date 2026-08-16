@@ -184,6 +184,10 @@ th {
 }
 td { padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--border); }
 
+/* Devices page: a brief confirming flash when "Last sync" updates live. */
+td[data-last-sync] { transition: color 1.5s ease; }
+td.just-synced { color: var(--success); font-weight: 600; }
+
 /* Stats */
 .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1.25rem; }
 .stat { text-align: left; }
