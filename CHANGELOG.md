@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.1.3]
+
+### Changed
+- Web dashboard styling now matches the app: reminder titles read in
+  plain off-white/light-grey text instead of link-blue, tags are the
+  accent yellow, and each reminder has a filled/outline circle (tap to
+  toggle active) instead of only showing an "off" badge when disabled.
+- The "Add reminder" button is now a floating button fixed to the
+  bottom-right corner (matching the app's FAB), instead of a link at
+  the bottom of the list that required scrolling all the way down.
+
+### Added
+- `POST /reminder/<id>/toggle` — flips a reminder's active state,
+  backing the new circle indicator.
+
 ## [1.1.2]
 
 ### Added

@@ -76,6 +76,20 @@ def reminder_delete(reminder_id):
     return redirect(url_for("views.home"))
 
 
+@bp.post("/reminder/<reminder_id>/toggle")
+@login_required
+def reminder_toggle(reminder_id):
+    """The circle next to a reminder's title: filled means active, matching
+    the app's ActiveCircle. Tapping it flips enabled, same as the app."""
+    _csrf_or_400()
+    r = store.get_reminder(reminder_id)
+    if r:
+        r["enabled"] = 0 if r["enabled"] else 1
+        r["updated_at"] = db.now_millis()
+        store.upsert_reminder(r)
+    return redirect(request.referrer or url_for("views.home"))
+
+
 @bp.post("/reminder/<reminder_id>/done")
 @login_required
 def reminder_done(reminder_id):

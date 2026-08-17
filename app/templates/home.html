@@ -14,9 +14,14 @@
 <section class="panel">
   {% for r in reminders %}
   <div class="reminder-row">
+    <form method="post" action="{{ url_for('views.reminder_toggle', reminder_id=r.id) }}">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <button class="active-circle{% if r.enabled %} active{% endif %}" type="submit"
+              aria-label="{{ r.title }}: {{ 'active, tap to switch off' if r.enabled else 'off, tap to switch on' }}"
+              title="{{ 'Active' if r.enabled else 'Off' }}"></button>
+    </form>
     <div class="body">
-      <div class="title"><a href="{{ url_for('views.reminder_edit', reminder_id=r.id) }}">{{ r.title }}</a>
-        {% if not r.enabled %}<span class="badge">off</span>{% endif %}</div>
+      <div class="title"><a href="{{ url_for('views.reminder_edit', reminder_id=r.id) }}">{{ r.title }}</a></div>
       {% if describe(r) %}<div class="when">{{ describe(r) }}</div>{% endif %}
       {% if tag_list(r) %}
       <div class="when">{% for t in tag_list(r) %}<a href="{{ url_for('views.home', tag=t) }}">#{{ t }}</a> {% endfor %}</div>
@@ -45,9 +50,12 @@
   {% else %}
   <p class="hint">Nothing coming up{% if active_tag %} under #{{ active_tag }}{% endif %}. Add a reminder and it appears here in time order.</p>
   {% endfor %}
-
-  <p style="margin-bottom:0; margin-top:0.75rem">
-    <a class="btn btn-primary" href="{{ url_for('views.reminder_edit', tag=active_tag or none) }}">Add reminder</a>
-  </p>
 </section>
+
+<a class="fab" href="{{ url_for('views.reminder_edit', tag=active_tag or none) }}" aria-label="Add reminder">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+       stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+    <path d="M12 5v14M5 12h14"/>
+  </svg>
+</a>
 {% endblock %}
