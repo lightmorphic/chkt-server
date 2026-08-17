@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.6]
+
+### Removed
+- Offsite backup to a private GitHub repository. Local daily backups plus
+  the existing "Download everything" zip and JSON import already cover
+  restoring a server; the GitHub piece was extra setup for no real benefit.
+
 ## [1.1.5]
 
 ### Added

@@ -45,8 +45,7 @@ container.
 
 ## Restore a backup
 
-Backups are dated JSON files in `data/backups/` (and in your private GitHub
-backup repository, if configured). To restore one:
+Backups are dated JSON files in `data/backups/`. To restore one:
 
 1. Sign in → **Settings** → **Import / restore**.
 2. Choose the backup file. Pick **Merge** to add it to what's there, or
@@ -64,9 +63,9 @@ account, backups.
 
 ## Lost the SECRET_KEY?
 
-Reminders and lists are fine, but encrypted settings (SMTP password, GitHub
-token, 2FA) can't be decrypted. Set a new `SECRET_KEY` in `.env`, restart,
-and re-enter those settings on the Settings page.
+Reminders and lists are fine, but encrypted settings (SMTP password, 2FA)
+can't be decrypted. Set a new `SECRET_KEY` in `.env`, restart, and re-enter
+those settings on the Settings page.
 
 ## Something fires twice
 

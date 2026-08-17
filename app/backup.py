@@ -1,20 +1,15 @@
-"""Backups: daily JSON snapshots kept locally, optional offsite copy pushed
-to a private GitHub repo, zip-everything download, and restore.
-
-The GitHub copy uses the contents API over HTTPS (no git binary needed).
+"""Backups: daily JSON snapshots kept locally, zip-everything download, and
+restore.
 """
-import base64
 import io
 import json
 import os
 import threading
 import time
-import urllib.request
 import zipfile
 from datetime import date, datetime
 
 from . import db, store
-from .settings_store import get as setting
 
 KEEP = 30
 
@@ -105,7 +100,6 @@ def write_daily_backup() -> str:
     with open(path, "w") as f:
         f.write(export_json())
     _prune()
-    _github_push(name, path)
     return path
 
 
@@ -115,58 +109,6 @@ def _prune():
     )
     for old in files[:-KEEP]:
         os.remove(os.path.join(backup_dir(), old))
-
-
-def _github_push(name: str, path: str):
-    """Offsite copy via the GitHub contents API. Quietly skipped when not set up."""
-    repo = setting("github_repo")     # e.g. "lightmorphic/chkt-data"
-    token = setting("github_token")
-    if not repo or not token:
-        return
-    with open(path, "rb") as f:
-        content = base64.b64encode(f.read()).decode()
-    url = f"https://api.github.com/repos/{repo}/contents/backups/{name}"
-
-    def _request(method, body):
-        req = urllib.request.Request(url, method=method,
-                                     data=json.dumps(body).encode() if body else None)
-        req.add_header("Authorization", "Bearer " + token)
-        req.add_header("Accept", "application/vnd.github+json")
-        return urllib.request.urlopen(req, timeout=20)
-
-    try:
-        # Need the existing file's sha to overwrite same-day backups.
-        sha = None
-        try:
-            with _request("GET", None) as resp:
-                sha = json.load(resp).get("sha")
-        except Exception:
-            pass
-        body = {"message": f"CHKT backup {name}", "content": content}
-        if sha:
-            body["sha"] = sha
-        _request("PUT", body).close()
-    except Exception:
-        # Offsite copy failing must never break the local backup.
-        pass
-
-
-def github_test() -> str:
-    repo = setting("github_repo")
-    token = setting("github_token")
-    if not repo or not token:
-        return "Set the repository and token first."
-    try:
-        req = urllib.request.Request(f"https://api.github.com/repos/{repo}")
-        req.add_header("Authorization", "Bearer " + token)
-        req.add_header("Accept", "application/vnd.github+json")
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            info = json.load(resp)
-        if info.get("private") is False:
-            return "Connected, but that repository is PUBLIC. Use a private one for backups."
-        return "Connected. Repository reachable and private."
-    except Exception as e:
-        return f"Couldn't reach the repository: {e}"
 
 
 def zip_everything() -> bytes:

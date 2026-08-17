@@ -1,9 +1,9 @@
 """Encryption for stored settings.
 
 The only secret in the environment is SECRET_KEY. Everything sensitive that
-lives in the database (SMTP passwords, GitHub tokens, VAPID keys, TOTP seeds)
-is encrypted with a key derived from it, so a stolen database file on its own
-gives up nothing.
+lives in the database (SMTP passwords, VAPID keys, TOTP seeds) is encrypted
+with a key derived from it, so a stolen database file on its own gives up
+nothing.
 """
 import base64
 import hashlib

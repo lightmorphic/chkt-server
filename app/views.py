@@ -135,9 +135,6 @@ def settings_page():
             save_form(request.form, ["alert_email", "smtp_host", "smtp_port",
                                      "smtp_from", "smtp_username", "smtp_password"])
             message = "Email settings saved."
-        elif section == "github":
-            save_form(request.form, ["github_repo", "github_token"])
-            message = "GitHub backup settings saved."
         elif section == "quiet":
             from .settings_store import set_quiet_hours
             set_quiet_hours(
@@ -149,12 +146,11 @@ def settings_page():
     from .update_check import VERSION, available_update
     from .settings_store import quiet_hours
     values = {k: setting(k) for k in ("alert_email", "smtp_host", "smtp_port",
-                                      "smtp_from", "smtp_username", "github_repo")}
+                                      "smtp_from", "smtp_username")}
     return render_template(
         "settings.html", values=values, message=message,
         server_version=VERSION, update_available=available_update(),
         smtp_password_set=bool(setting("smtp_password")),
-        github_token_set=bool(setting("github_token")),
         totp_enabled=bool(setting("totp_secret")),
         quiet=quiet_hours(),
         outbox=outbox(), csrf=csrf_token(),
@@ -167,14 +163,6 @@ def settings_test_email():
     _csrf_or_400()
     ok, message = send_email("CHKT test message", "If you can read this, CHKT's email settings work.")
     return render_template("fragment_message.html", message=message, ok=ok)
-
-
-@bp.post("/settings/test-github")
-@login_required
-def settings_test_github():
-    _csrf_or_400()
-    message = backup.github_test()
-    return render_template("fragment_message.html", message=message, ok=message.startswith("Connected. Repository"))
 
 
 @bp.post("/settings/backup-now")

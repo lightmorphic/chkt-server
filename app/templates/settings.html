@@ -43,22 +43,9 @@ or rerun <code>deploy.sh</code>. Your data is untouched either way.</p>
   </section>
 
   <section class="panel">
-    <h2>Offsite backup (GitHub)</h2>
-    <p class="hint">Each daily backup is also pushed to a private GitHub repository, so losing this server loses nothing.</p>
-    <form method="post">
-      <input type="hidden" name="csrf" value="{{ csrf }}">
-      <input type="hidden" name="section" value="github">
-      <label for="s-repo">Repository (owner/name)</label>
-      <input id="s-repo" name="github_repo" value="{{ values.github_repo }}" placeholder="lightmorphic/chkt-data">
-      <label for="s-token">Access token {% if github_token_set %}<span class="badge">saved</span>{% endif %}</label>
-      <input id="s-token" name="github_token" type="password"
-             placeholder="{{ '••••••••  (leave blank to keep)' if github_token_set else 'fine-grained token, Contents read/write' }}">
-      <p style="margin-bottom:0">
-        <button class="btn-primary" type="submit">Save backup settings</button>
-        <button type="submit" formaction="{{ url_for('views.settings_test_github') }}">Test connection</button>
-      </p>
-    </form>
-    <form method="post" action="{{ url_for('views.settings_backup_now') }}" style="margin-top:0.75rem">
+    <h2>Local backups</h2>
+    <p class="hint">A dated JSON snapshot is kept in the server's data folder every day. Use "Download everything" below any time you want a copy on your own hard drive.</p>
+    <form method="post" action="{{ url_for('views.settings_backup_now') }}">
       <input type="hidden" name="csrf" value="{{ csrf }}">
       <button type="submit">Run a backup now</button>
     </form>

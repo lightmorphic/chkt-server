@@ -271,8 +271,8 @@ footer .fine { color: var(--muted-fg); font-size: 0.8125rem; margin-top: 1rem; }
     </div>
     <div class="panel">
       <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 8v13H3V8M1 3h22v5H1z"/><path d="M10 12h4"/></svg></div>
-      <h3>Backups that leave the building</h3>
-      <p>Daily snapshots kept locally, with an optional push to your own private GitHub repository so losing the server loses nothing.</p>
+      <h3>Backups</h3>
+      <p>Daily snapshots kept locally, plus a one-click zip download any time you want a copy on your own hard drive.</p>
     </div>
     <div class="panel">
       <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 21h14"/></svg></div>
@@ -314,7 +314,7 @@ docker compose up -d --build</code></pre>
     <div class="steps">
       <div>
         <h3>On your own network</h3>
-        <p style="max-width:none">The command above is enough for a home network or a private network like Tailscale. Everything, email alerts, offsite backups, quiet hours, is configured afterwards on the Settings page.</p>
+        <p style="max-width:none">The command above is enough for a home network or a private network like Tailscale. Everything, email alerts, backups, quiet hours, is configured afterwards on the Settings page.</p>
       </div>
       <div>
         <h3>On the public internet</h3>
@@ -327,7 +327,7 @@ docker compose up -d --build</code></pre>
 <section class="privacy">
   <div class="panel">
     <h3>Your server, your data</h3>
-    <p>Everything lives in your own SQLite database on your own machine. No account with us, nothing phones out except what you explicitly configure (email, offsite backup).</p>
+    <p>Everything lives in your own SQLite database on your own machine. No account with us, nothing phones out except what you explicitly configure (email).</p>
   </div>
   <div class="panel">
     <h3>Encrypted at rest</h3>

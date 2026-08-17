@@ -8,7 +8,7 @@ from . import db
 from .crypto import decrypt, encrypt
 
 # Keys whose values are secrets: masked in the UI, kept on empty save.
-SECRET_KEYS = {"smtp_password", "github_token", "vapid_private", "totp_secret"}
+SECRET_KEYS = {"smtp_password", "vapid_private", "totp_secret"}
 
 
 def get(key: str, default: str = "") -> str:

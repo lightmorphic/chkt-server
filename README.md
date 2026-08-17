@@ -11,8 +11,8 @@ feature of the phone app is there in the browser too:
   notifications and spoken alerts.
 - **Sync**, your phone and browser always match. Off by default on the
   phone; one server address and access key turns it on.
-- **Backups that leave the building**, daily snapshots kept locally and
-  pushed to a private GitHub repository.
+- **Backups**, daily local snapshots plus a one-click "download everything"
+  zip you can save wherever you like.
 
 GPL-3.0, no tracking, no third-party services beyond what you choose to
 configure.
@@ -31,7 +31,7 @@ That's it, no configuration file needed to try it. CHKT generates its own
 secret key on first start and saves it in `./data`, so it survives
 restarts and rebuilds. Open `http://<this-machine>:8321` and the first
 visit walks you through creating your account. Everything else, email
-alerts, offsite backups, two-factor sign-in, device keys, quiet hours, is
+alerts, backups, two-factor sign-in, device keys, quiet hours, is
 configured on the Settings and Devices pages, with a test button beside
 anything that can be tested.
 
