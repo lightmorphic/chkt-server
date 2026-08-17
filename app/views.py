@@ -16,9 +16,8 @@ from .settings_store import SECRET_KEYS, get as setting, put as setting_put, sav
 bp = Blueprint("views", __name__)
 
 ALERT_MODES = [
-    ("RING_AND_SPEAK", "Ring + speak"),
-    ("RING_ONLY", "Ring only"),
-    ("SPEAK_ONLY", "Speak only"),
+    ("NOTIFY_AND_SPEAK", "Notification + voice"),
+    ("SPEAK_ONLY", "Voice only"),
     ("NOTIFY_ONLY", "Notification only"),
 ]
 SNOOZES = [(10, "10 min"), (30, "30 min"), (60, "1 hr"), (180, "3 hrs"), (720, "12 hrs"), (1440, "1 day")]
@@ -399,8 +398,10 @@ def _reminder_from_form(form, existing):
         "notes": (form.get("notes") or "").strip(),
         "due_at": due_at,
         "repeat_rule": rule,
-        "alert_mode": form.get("alert_mode") if form.get("alert_mode") in dict(ALERT_MODES) else "RING_AND_SPEAK",
-        "pre_tone": 1 if form.get("pre_tone") else 0,
+        "alert_mode": store.normalize_alert_mode(form.get("alert_mode")),
+        # No longer settable in the UI; kept only so existing rows don't
+        # need a schema change.
+        "pre_tone": 0,
         "enabled": 1 if form.get("active") else 0,
         "vibrate": 1 if form.get("vibrate") else 0,
         "respect_dnd": 1 if form.get("respect_dnd") else 0,

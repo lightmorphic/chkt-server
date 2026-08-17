@@ -6,6 +6,18 @@ from datetime import datetime
 from . import db
 from .repeat_rules import next_after
 
+_LEGACY_ALERT_MODES = {"RING_AND_SPEAK": "NOTIFY_AND_SPEAK", "RING_ONLY": "NOTIFY_ONLY"}
+_ALERT_MODES = {"NOTIFY_AND_SPEAK", "SPEAK_ONLY", "NOTIFY_ONLY"}
+
+
+def normalize_alert_mode(value):
+    """Maps a stored/imported alert_mode onto the current three-way scheme.
+    Ringing was removed as an alert component; a JSON export/sync payload
+    from an older app or server build can still carry the old five values."""
+    value = _LEGACY_ALERT_MODES.get(value, value)
+    return value if value in _ALERT_MODES else "NOTIFY_AND_SPEAK"
+
+
 REMINDER_FIELDS = (
     "id", "tags", "title", "notes", "due_at", "repeat_rule", "alert_mode",
     "pre_tone", "enabled", "vibrate", "respect_dnd", "nag_interval_minutes",

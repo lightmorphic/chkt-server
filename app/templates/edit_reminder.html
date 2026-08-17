@@ -16,7 +16,7 @@
   <p class="hint">Say something like "remind me at 2pm to feed the cat" and CHKT fills the form in below, check it and save. Needs Chrome or Edge; nothing is sent anywhere until you save.</p>
   {% endif %}
 
-  <label for="f-notes">Notes (also spoken)</label>
+  <label for="f-notes">Notes (shown, not spoken)</label>
   <textarea id="f-notes" name="notes">{{ reminder.notes if reminder else '' }}</textarea>
 
   <label for="f-tags">Tags, separated by commas (optional)</label>
@@ -89,10 +89,6 @@
     <option value="{{ value }}" {% if reminder and reminder.alert_mode == value %}selected{% endif %}>{{ label }}</option>
     {% endfor %}
   </select>
-  <label style="display:flex;gap:0.5rem;align-items:center;font-weight:400">
-    <input style="width:auto" type="checkbox" name="pre_tone" {% if reminder and reminder.pre_tone %}checked{% endif %}>
-    Play a tone before speaking
-  </label>
   <label style="display:flex;gap:0.5rem;align-items:center;font-weight:400">
     <input style="width:auto" type="checkbox" name="vibrate" {% if not reminder or reminder.vibrate %}checked{% endif %}>
     Vibrate (on your phone)

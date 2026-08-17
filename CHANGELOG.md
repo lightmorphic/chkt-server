@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.1.1]
+
+### Changed
+- Alert choice simplified to match the app: notification + voice, voice
+  only, or notification only. Ringing and the pre-tone chime are gone;
+  the "stop after" nag options no longer need them either.
+- Notes are shown on the alert overlay but no longer read aloud — only
+  the title is spoken.
+- Existing reminders saved under the old ring-based alert modes migrate
+  automatically to their closest new equivalent on next start.
+
 ## [1.1.0]
 
 ### Added

@@ -331,36 +331,11 @@
     if (item.quiet) return;
     // Vibration API is mobile-browser-only; no-ops harmlessly elsewhere.
     if (item.vibrate && navigator.vibrate) navigator.vibrate([400, 250, 400, 250, 400]);
-    var mode = item.alert_mode || "RING_AND_SPEAK";
-    var ring = mode === "RING_AND_SPEAK" || mode === "RING_ONLY";
-    var speak = mode === "RING_AND_SPEAK" || mode === "SPEAK_ONLY";
-    var speakNow = function () {
-      if (!speak || !("speechSynthesis" in window)) return;
-      var text = item.title + (item.notes ? ". " + item.notes : "");
-      var say = function () {
-        var u = new SpeechSynthesisUtterance(text);
-        speechSynthesis.speak(u);
-      };
-      if (item.pre_tone) { tone(660, 0.4, say); } else { say(); }
-    };
-    if (ring) { tone(880, 1.2, speakNow); } else { speakNow(); }
-  }
-
-  function tone(freq, seconds, done) {
-    try {
-      var ctx = new (window.AudioContext || window.webkitAudioContext)();
-      var osc = ctx.createOscillator();
-      var gain = ctx.createGain();
-      osc.frequency.value = freq;
-      gain.gain.setValueAtTime(0.25, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + seconds);
-      osc.connect(gain).connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + seconds);
-      osc.onended = function () { ctx.close(); if (done) done(); };
-    } catch (e) {
-      if (done) done();
-    }
+    var mode = item.alert_mode || "NOTIFY_AND_SPEAK";
+    var speak = mode === "NOTIFY_AND_SPEAK" || mode === "SPEAK_ONLY";
+    if (!speak || !("speechSynthesis" in window)) return;
+    // Notes show in the overlay but aren't spoken — matches the app.
+    speechSynthesis.speak(new SpeechSynthesisUtterance(item.title));
   }
 
   function act(path, body) {

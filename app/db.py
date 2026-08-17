@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS reminders (
     notes TEXT NOT NULL DEFAULT '',
     due_at INTEGER,
     repeat_rule TEXT NOT NULL DEFAULT '',
-    alert_mode TEXT NOT NULL DEFAULT 'RING_AND_SPEAK',
+    alert_mode TEXT NOT NULL DEFAULT 'NOTIFY_AND_SPEAK',
     pre_tone INTEGER NOT NULL DEFAULT 0,
     enabled INTEGER NOT NULL DEFAULT 1,
     vibrate INTEGER NOT NULL DEFAULT 1,
@@ -86,6 +86,11 @@ CREATE TABLE IF NOT EXISTS fired (
 # safe to re-run: SQLite rejects a duplicate column and we just ignore that.
 MIGRATIONS = [
     "ALTER TABLE fired ADD COLUMN quiet INTEGER NOT NULL DEFAULT 0",
+    # Ringing was removed as an alert component; rewrite rows saved under
+    # the old three-way scheme onto their closest new equivalent. Plain
+    # UPDATEs, safe to re-run: nothing matches after the first pass.
+    "UPDATE reminders SET alert_mode = 'NOTIFY_AND_SPEAK' WHERE alert_mode = 'RING_AND_SPEAK'",
+    "UPDATE reminders SET alert_mode = 'NOTIFY_ONLY' WHERE alert_mode = 'RING_ONLY'",
 ]
 
 

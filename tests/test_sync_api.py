@@ -19,7 +19,7 @@ from app.auth import new_access_key  # noqa: E402
 def reminder_json(rid, tags, title, updated_at, **kw):
     base = {
         "id": rid, "tags": tags, "title": title, "notes": "",
-        "dueAt": 1900000000000, "repeatRule": "", "alertMode": "RING_AND_SPEAK",
+        "dueAt": 1900000000000, "repeatRule": "", "alertMode": "NOTIFY_AND_SPEAK",
         "preTone": False, "enabled": True, "snoozedUntil": None,
         "vibrate": True, "respectDnd": False, "nagIntervalMinutes": 0,
         "nagStopAfterMinutes": 60, "deleteAfterDismissed": False,
