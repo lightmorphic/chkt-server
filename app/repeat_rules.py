@@ -2,7 +2,7 @@
 next-occurrence behaviour, so a reminder repeats identically wherever it lives.
 
 Formats: "" | "DAILY" | "WEEKLY:MON,THU" | "MONTHLY:15" | "MONTHLY:LAST"
-         | "YEARLY:08-10" | "EVERY:90m|12h|3d|2w"
+         | "YEARLY:08-10" | "EVERY:90m|12h|3d|2w" | "EVERY:3y"
 """
 import calendar
 import re
@@ -75,6 +75,16 @@ def next_after(rule: str, previous: datetime, after: datetime):
         return None
 
     if kind == "EVERY":
+        years_match = re.fullmatch(r"(\d+)y", arg.strip())
+        if years_match:
+            n = int(years_match.group(1))
+            if n <= 0:
+                return None
+            candidate = previous
+            while candidate <= after:
+                candidate = _add_years(candidate, n)
+            return candidate
+
         m = re.fullmatch(r"(\d+)([mhdw])", arg.strip())
         if not m:
             return None
@@ -89,6 +99,14 @@ def next_after(rule: str, previous: datetime, after: datetime):
         return candidate
 
     return None
+
+
+def _add_years(dt: datetime, n: int) -> datetime:
+    """Calendar years, not a fixed timedelta, so leap years don't drift it.
+    29 Feb clamps to 28 Feb in non-leap years, same as the YEARLY rule."""
+    year = dt.year + n
+    day = min(dt.day, calendar.monthrange(year, dt.month)[1])
+    return dt.replace(year=year, day=day)
 
 
 def _int_or_none(s):

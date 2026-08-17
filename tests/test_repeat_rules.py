@@ -44,8 +44,19 @@ class RepeatRuleTest(unittest.TestCase):
         self.assertEqual(dt(2026, 8, 11, 9, 0),
                          next_after("EVERY:1d", dt(2026, 8, 1, 9, 0), dt(2026, 8, 10, 10, 0)))
 
+    def test_every_years_no_drift(self):
+        # Two 3-year steps from 2020 land exactly on 2026 (not after itself),
+        # so the third step (2029) is the first strictly-after occurrence.
+        self.assertEqual(dt(2029, 8, 10, 9, 0),
+                         next_after("EVERY:3y", dt(2020, 8, 10, 9, 0), dt(2026, 8, 10, 9, 0)))
+
+    def test_every_years_feb29(self):
+        # 2027 is not a leap year: clamps to 28 Feb, same as YEARLY.
+        self.assertEqual(dt(2027, 2, 28, 10, 0),
+                         next_after("EVERY:3y", dt(2024, 2, 29, 10, 0), dt(2024, 3, 1, 0, 0)))
+
     def test_garbage_is_none(self):
-        for raw in ("WEEKLY:", "MONTHLY:99", "YEARLY:13-40", "EVERY:0d", "EVERY:xyz", "BANANA"):
+        for raw in ("WEEKLY:", "MONTHLY:99", "YEARLY:13-40", "EVERY:0d", "EVERY:0y", "EVERY:xyz", "BANANA"):
             self.assertIsNone(next_after(raw, dt(2026, 8, 10, 9, 0), dt(2026, 8, 10, 9, 1)), raw)
 
 

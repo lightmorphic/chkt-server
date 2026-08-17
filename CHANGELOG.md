@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.2]
+
+### Added
+- Custom repeat interval now supports whole years ("every 3 years"),
+  matching the app. Calendar-based, not a fixed timedelta, so leap
+  years don't drift it (29 Feb clamps to 28 Feb, same as YEARLY).
+
 ## [1.1.1]
 
 ### Changed

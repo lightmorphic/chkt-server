@@ -362,7 +362,7 @@ def _reminder_from_form(form, existing):
     elif kind == "EVERY":
         n = (form.get("every_n") or "").strip()
         unit = form.get("every_unit") or "d"
-        rule = f"EVERY:{int(n)}{unit}" if n.isdigit() and int(n) > 0 and unit in "mhdw" else ""
+        rule = f"EVERY:{int(n)}{unit}" if n.isdigit() and int(n) > 0 and unit in "mhdwy" else ""
     else:
         rule = ""
 
