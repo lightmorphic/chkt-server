@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.5]
+
+### Added
+- Gunicorn access logging (method, path, status), so a support session can
+  actually see what a request did instead of finding nothing in the logs.
+
 ## [1.1.4]
 
 ### Fixed

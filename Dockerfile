@@ -18,4 +18,6 @@ EXPOSE 8321
 ENTRYPOINT ["./entrypoint.sh"]
 # One worker on purpose: the due-reminder engine runs inside the app, and a
 # second worker would fire every reminder twice. Threads handle concurrency.
-CMD ["gunicorn", "-b", "0.0.0.0:8321", "--workers", "1", "--threads", "8", "run:app"]
+CMD ["gunicorn", "-b", "0.0.0.0:8321", "--workers", "1", "--threads", "8", \
+     "--access-logfile", "-", \
+     "--access-logformat", "%(t)s %(h)s \"%(r)s\" %(s)s", "run:app"]
