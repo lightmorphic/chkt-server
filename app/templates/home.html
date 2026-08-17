@@ -14,12 +14,6 @@
 <section class="panel">
   {% for r in reminders %}
   <div class="reminder-row">
-    <form method="post" action="{{ url_for('views.reminder_toggle', reminder_id=r.id) }}">
-      <input type="hidden" name="csrf" value="{{ csrf }}">
-      <button class="active-circle{% if r.enabled %} active{% endif %}" type="submit"
-              aria-label="{{ r.title }}: {{ 'active, tap to switch off' if r.enabled else 'off, tap to switch on' }}"
-              title="{{ 'Active' if r.enabled else 'Off' }}"></button>
-    </form>
     <div class="body">
       <div class="title"><a href="{{ url_for('views.reminder_edit', reminder_id=r.id) }}">{{ r.title }}</a></div>
       {% if describe(r) %}<div class="when">{{ describe(r) }}</div>{% endif %}
@@ -27,14 +21,11 @@
       <div class="when">{% for t in tag_list(r) %}<a href="{{ url_for('views.home', tag=t) }}">#{{ t }}</a> {% endfor %}</div>
       {% endif %}
     </div>
-    <form method="post" action="{{ url_for('views.reminder_done', reminder_id=r.id) }}">
+    <form method="post" action="{{ url_for('views.reminder_toggle', reminder_id=r.id) }}">
       <input type="hidden" name="csrf" value="{{ csrf }}">
-      <button class="icon-btn" type="submit" aria-label="Mark {{ r.title }} done" title="Done">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M5 13 L10 18 L19 6"/>
-        </svg>
-      </button>
+      <button class="active-circle{% if r.enabled %} active{% endif %}" type="submit"
+              aria-label="{{ r.title }}: {{ 'active, tap to switch off' if r.enabled else 'off, tap to switch on' }}"
+              title="{{ 'Active' if r.enabled else 'Off' }}"></button>
     </form>
     <form method="post" action="{{ url_for('views.reminder_delete', reminder_id=r.id) }}">
       <input type="hidden" name="csrf" value="{{ csrf }}">
