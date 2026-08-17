@@ -45,10 +45,10 @@
 
     <div data-repeat-panel="WEEKLY" hidden>
       <label>Days of the week</label>
-      <div class="row" role="group" aria-label="Days of the week">
+      <div class="weekday-picker" role="group" aria-label="Days of the week">
         {% for d in ['MON','TUE','WED','THU','FRI','SAT','SUN'] %}
-        <label style="display:flex;gap:0.4rem;align-items:center;font-weight:400;min-width:auto">
-          <input style="width:auto" type="checkbox" name="weekday" value="{{ d }}"
+        <label>
+          <input type="checkbox" name="weekday" value="{{ d }}"
             {% if rule.startswith('WEEKLY') and d in rule %}checked{% endif %}>
           {{ d.title() }}
         </label>

@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.1.4]
+
+### Fixed
+- The Weekly repeat day-of-week checkboxes were visually split from
+  their labels (checkbox in one row, day name in another) — caused by
+  reusing the generic `.row` form-field class, which forces `flex:1;
+  min-width:8rem` onto each child. Given its own `.weekday-picker`
+  class instead.
+
 ## [1.1.3]
 
 ### Changed
