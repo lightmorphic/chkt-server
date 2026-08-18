@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.1.7]
+
+### Fixed
+- Reminder times shown an hour off from the phone: the container had no
+  timezone of its own, so it rendered every time in UTC regardless of
+  where the server actually is. Now mounts the host's `/etc/localtime`
+  and `/etc/timezone` read-only so the two agree.
+- Missing favicon: added a `/favicon.ico` and a real `.ico` file
+  alongside the SVG icon, since some browsers request that path
+  directly and ignore the `<link rel="icon">` tag.
+
 ## [1.1.6]
 
 ### Removed

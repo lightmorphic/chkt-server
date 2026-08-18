@@ -35,6 +35,12 @@ def healthz():
     return jsonify({"ok": True})
 
 
+@bp.get("/favicon.ico")
+def favicon():
+    # Browsers request this well-known path directly, ignoring <link> tags.
+    return redirect(url_for("static", filename="favicon.ico"))
+
+
 @bp.get("/")
 @login_required
 def home():

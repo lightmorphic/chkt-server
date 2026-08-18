@@ -16,6 +16,10 @@ services:
       - CHKT_INSECURE_COOKIES=${CHKT_INSECURE_COOKIES:-0}
     volumes:
       - ./data:/data
+      # Match the host's timezone, so reminder times shown here agree with
+      # the phone (e.g. "9am" means the same 9am, not a UTC 9am).
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
     healthcheck:
       test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8321/healthz', timeout=5)"]
       interval: 60s
