@@ -129,6 +129,20 @@ class SyncApiTest(unittest.TestCase):
         self.assertTrue(rec["respectDnd"])
         self.assertTrue(rec["deleteAfterDismissed"])
 
+    def test_08b_sync_preserves_server_nag_state(self):
+        # The server is mid-nag on R2 (fired once, waiting on a re-alert).
+        # The app never sends nag_started_at (it isn't in the JSON
+        # contract), so a routine sync push for an unrelated edit must not
+        # silently cancel the in-progress re-alert cycle.
+        store.set_nag_started("R2", 6100)
+        self._sync({"since": 0, "logs": [],
+                    "reminders": [reminder_json("R2", "cat, urgent", "Nagging one (renamed)", 6200,
+                                                nagIntervalMinutes=5, nagStopAfterMinutes=30,
+                                                deleteAfterDismissed=True)]})
+        rec = store.get_reminder("R2")
+        self.assertEqual("Nagging one (renamed)", rec["title"])
+        self.assertEqual(6100, rec["nag_started_at"])
+
     def test_09_acknowledge_deletes_when_asked(self):
         from app import store
         store.acknowledge("R2", 1, "DONE")

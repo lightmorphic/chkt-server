@@ -302,9 +302,17 @@
   var queue = [];
   var current = null;
 
+  var pollTimer = setInterval(poll, 20000);
+
   function poll() {
     fetch("/web/fired?since=" + since, { headers: { "X-CSRF": csrf } })
-      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (r) {
+        // A redirect here means the session expired: the request landed on
+        // the login page instead of JSON. Silently swallowing that (the old
+        // behaviour) meant alerts just stopped appearing with no clue why.
+        if (r.redirected || r.url.indexOf("/login") !== -1) { onSessionExpired(); return null; }
+        return r.ok ? r.json() : null;
+      })
       .then(function (data) {
         if (!data) return;
         since = data.now;
@@ -313,7 +321,16 @@
       })
       .catch(function () { /* offline; try again next tick */ });
   }
-  setInterval(poll, 20000);
+
+  function onSessionExpired() {
+    clearInterval(pollTimer);
+    if (document.getElementById("session-expired-banner")) return;
+    var banner = document.createElement("div");
+    banner.id = "session-expired-banner";
+    banner.className = "session-expired-banner";
+    banner.innerHTML = "Signed out, so alerts have stopped. <a href=\"/login\">Sign back in</a> to keep getting them.";
+    document.body.prepend(banner);
+  }
 
   function showNext() {
     current = queue.shift() || null;

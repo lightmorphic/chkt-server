@@ -41,6 +41,10 @@ def sync():
             continue
         existing = _existing("reminders", incoming["id"])
         if existing is None or existing["updated_at"] < incoming["updated_at"]:
+            # nag_started_at tracks this server's own in-progress re-alert
+            # cycle; the app never sends it (it isn't in the JSON contract),
+            # so a sync merge must never clobber it with the null default.
+            incoming["nag_started_at"] = existing["nag_started_at"] if existing else None
             store.upsert_reminder(incoming)
 
     for record in body.get("logs") or []:

@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.1.8]
+
+### Fixed
+- The web dashboard's live-alert polling silently died forever once the
+  login session expired: the redirect to `/login` was treated as a
+  successful response, so it tried to parse the login page as JSON,
+  failed quietly, and never announced another alert. Now detects the
+  redirect and shows a "signed out" banner with a link to sign back in.
+- Re-alert nagging stopped after the first alert, and a fired reminder
+  could get stuck showing as still due long after its time passed. Root
+  cause: the sync merge always overwrote `nag_started_at` with null on
+  any incoming reminder (the app never sends it, it isn't in the JSON
+  contract), so a routine sync push moments after an alert fired would
+  silently cancel the in-progress re-alert cycle. Fixed by preserving the
+  server's own value across a sync merge instead of accepting the
+  client's null default.
+
 ## [1.1.7]
 
 ### Fixed

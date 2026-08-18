@@ -213,6 +213,14 @@ button:hover, .btn:hover { border-color: var(--muted-fg); }
 .msg.ok { color: var(--success); background: var(--success-bg); }
 .msg.bad { color: var(--danger); background: var(--danger-bg); }
 
+.session-expired-banner {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: center; gap: 0.75rem;
+  padding: 0.6rem 1rem; font-size: 0.9375rem; font-weight: 600;
+  color: var(--danger); background: var(--danger-bg);
+}
+.session-expired-banner a { color: inherit; text-decoration: underline; }
+
 .badge {
   display: inline-block; border-radius: 999px; padding: 0.1rem 0.7rem;
   font-size: 0.8125rem; font-weight: 600;
