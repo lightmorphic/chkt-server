@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.1.9]
+
+### Fixed
+- A repeating reminder stayed pinned at the top of the list long after
+  its time passed, still showing today instead of its real next
+  occurrence: the list sorted by the raw stored due time, which only
+  advances once the reminder is answered or nag-times-out. Now sorts by
+  the actual next alert instead, matching the same fix on the app
+  (chkt 1.0.13).
+
 ## [1.1.8]
 
 ### Fixed

@@ -27,12 +27,37 @@ REMINDER_FIELDS = (
 )
 
 
+def next_alert_millis(reminder: dict, now: int = None) -> int:
+    """Sort key for the reminder list: once a repeating reminder's fire time
+    has passed, its real next alert is the next occurrence (tomorrow, next
+    week, ...), not the stale past time still in due_at until it's answered
+    or nag-timed-out. A one-off keeps its raw time even when overdue — it
+    has no next occurrence to roll forward to, and unanswered still means
+    it needs attention now."""
+    raw = reminder.get("snoozed_until") or reminder.get("due_at")
+    if raw is None:
+        return None
+    now = now if now is not None else db.now_millis()
+    if raw > now:
+        return raw
+    nxt = next_after(reminder.get("repeat_rule", ""),
+                      datetime.fromtimestamp(raw / 1000).astimezone(),
+                      datetime.fromtimestamp(now / 1000).astimezone())
+    return int(nxt.timestamp() * 1000) if nxt is not None else raw
+
+
 def reminders(include_deleted=False):
     q = ("SELECT * FROM reminders"
-         + ("" if include_deleted else " WHERE deleted_at IS NULL")
-         + " ORDER BY enabled DESC, due_at IS NULL, COALESCE(snoozed_until, due_at)")
+         + ("" if include_deleted else " WHERE deleted_at IS NULL"))
     with db.connect() as conn:
-        return [dict(r) for r in conn.execute(q).fetchall()]
+        rows = [dict(r) for r in conn.execute(q).fetchall()]
+    now = db.now_millis()
+    rows.sort(key=lambda r: (
+        not r["enabled"],
+        next_alert_millis(r, now) is None,
+        next_alert_millis(r, now) or 0,
+    ))
+    return rows
 
 
 def tag_list(reminder):
