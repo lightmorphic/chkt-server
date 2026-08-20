@@ -28,17 +28,21 @@ docker compose logs --tail 100 chkt
 ## Update to a new version
 
 ```bash
-git pull
-docker compose up -d --build
+docker compose pull
+docker compose up -d
 ```
 
 ## Roll back a bad update
 
+Pin the version you want in `.env` and bring it back up:
+
 ```bash
-git log --oneline          # find the version that worked, e.g. abc1234
-git checkout abc1234
-docker compose up -d --build
+echo "CHKT_VERSION=1.1.9" >> .env    # the version that worked
+docker compose up -d
 ```
+
+Released versions are listed at
+https://github.com/lightmorphic/chkt-server/releases.
 
 Your data is safe during a rollback: it lives in `data/`, outside the
 container.
@@ -58,14 +62,31 @@ restored is a hope, not a backup.
 ## Move to a new server
 
 Copy the whole folder (including `data/` and `.env`) to the new machine and
-run `docker compose up -d --build`. That's everything: settings, reminders,
+run `docker compose up -d`. That's everything: settings, reminders,
 account, backups.
 
 ## Lost the SECRET_KEY?
 
-Reminders and lists are fine, but encrypted settings (SMTP password, 2FA)
-can't be decrypted. Set a new `SECRET_KEY` in `.env`, restart, and re-enter
-those settings on the Settings page.
+Reminders, tags, history and backups are fine — none of them are
+encrypted. What you lose is everything on the Settings page: it is all
+stored encrypted, so with a new key it reads as blank and reverts to
+defaults. The old values stay in the database, just unreadable.
+
+Set a new key (or simply leave `SECRET_KEY` unset and let CHKT generate
+one into `data/.secret_key`), restart, then:
+
+1. Re-enter the Settings page, including SMTP host, port, from-address
+   and password, and quiet hours.
+2. Re-enrol two-factor sign-in if you had it.
+3. Re-subscribe browser notifications on each device — the web-push
+   keypair is regenerated, so existing subscriptions go silent.
+
+You are not locked out: your username and password live outside the
+encrypted settings.
+
+Safest place for the key is nowhere at all — leave `SECRET_KEY` unset and
+it lives in `data/`, which your backups already cover. A key set in `.env`
+disappears the day someone tidies that file.
 
 ## Something fires twice
 

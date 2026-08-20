@@ -1,6 +1,9 @@
 services:
   chkt:
-    build: .
+    # Prebuilt image, so installing is a pull and no build tooling is
+    # needed on the server (some stack managers cannot build at all).
+    # Pin a version if you'd rather upgrade deliberately: CHKT_VERSION=1.1.10
+    image: ghcr.io/lightmorphic/chkt-server:${CHKT_VERSION:-latest}
     container_name: chkt-server
     restart: unless-stopped
     # Nothing in CHKT needs elevated privileges: no privilege escalation

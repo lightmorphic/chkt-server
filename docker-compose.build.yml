@@ -1,0 +1,10 @@
+# Build CHKT from this source tree instead of pulling the published image.
+# Use alongside the base file, not instead of it:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
+#
+# Everything else (port, data location, timezone, healthcheck) comes from
+# docker-compose.yml, so the only difference is where the image comes from.
+services:
+  chkt:
+    build: .

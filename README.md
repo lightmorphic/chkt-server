@@ -24,10 +24,18 @@ Requirements: Docker with the compose plugin.
 ```bash
 git clone https://github.com/lightmorphic/chkt-server
 cd chkt-server
-docker compose up -d --build
+docker compose up -d
 ```
 
-That's it, no configuration file needed to try it. CHKT generates its own
+That pulls a prebuilt image, so nothing is compiled on your server and it
+works on machines with no build tooling. Prefer to build it yourself from
+the source you just cloned? Add the build override:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
+```
+
+Either way, no configuration file is needed to try it. CHKT generates its own
 secret key on first start and saves it in `./data`, so it survives
 restarts and rebuilds. Open `http://<this-machine>:8321` and the first
 visit walks you through creating your account. Everything else, email
@@ -63,7 +71,7 @@ cp Caddyfile.example Caddyfile
 # page before you do. This token means only you can create the account:
 echo "CHKT_SETUP_TOKEN=$(python3 -c 'import secrets; print(secrets.token_urlsafe(16))')" >> .env
 
-docker compose -f docker-compose.yml -f docker-compose.https.yml up -d --build
+docker compose -f docker-compose.yml -f docker-compose.https.yml up -d
 ```
 
 Caddy requests and renews the certificate itself; there's nothing else to
