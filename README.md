@@ -45,31 +45,29 @@ alerts, backups, two-factor sign-in, device keys, quiet hours, is
 configured on the Settings and Devices pages, with a test button beside
 anything that can be tested.
 
-### Set your timezone
+### Settings, if the defaults don't suit your machine
 
-CHKT shows and fires reminders in the container's timezone, which is UTC
-unless you say otherwise. If that isn't your timezone, put yours in
-`.env`:
-
-```bash
-echo "TZ=Europe/London" >> .env      # or your zone from the tz database
-```
-
-Then `docker compose up -d`. Without it, a 9am reminder is 9am UTC, which
-won't match the phone.
-
-### If port 8321 is taken, or your data lives elsewhere
-
-Both are optional and both go in `.env` beside the compose file:
+Everything is optional and lives in a `.env` file beside the compose file.
+Copy the annotated example and edit what you need:
 
 ```bash
-echo "CHKT_PORT=4010" >> .env                     # host port; inside stays 8321
-echo "CHKT_DATA=/opt/chkt-server/data" >> .env    # where the database lives
+cp .env.example .env
+docker compose up -d
 ```
 
-Then `docker compose up -d --build` as usual. Leave them unset and you get
-8321 and `./data`, as above. Changing `CHKT_DATA` later points the app at a
-different folder — move the old one across first, or it starts empty.
+| Setting | Default | What it's for |
+|---|---|---|
+| `CHKT_TZ` | `UTC` | Your timezone, e.g. `Europe/London`. Without it a 9am reminder is 9am UTC and won't match the phone. |
+| `CHKT_PORT` | `8321` | Host port, if 8321 is taken. Inside the container it's always 8321. |
+| `CHKT_DATA` | `./data` | Where the database, backups and key live. Move the old folder across first if you change it, or CHKT starts empty. |
+| `CHKT_INSECURE_COOKIES` | `0` | Set to `1` when reaching CHKT over plain HTTP on a trusted network, or sign-in fails. |
+| `CHKT_VERSION` | `latest` | Pin a release to upgrade deliberately, or to roll one back. |
+| `CHKT_SECRET_KEY` | generated | Best left unset, see below. |
+
+Every name starts with `CHKT_` on purpose: Docker Compose lets the
+environment it runs in override your `.env`, so a plain name like
+`SECRET_KEY` or `TZ` can be quietly claimed by whatever launched compose —
+some stack managers set both for themselves.
 
 ### Putting it on the internet with a domain
 
