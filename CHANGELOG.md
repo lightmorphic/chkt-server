@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.1.12]
+
+### Fixed
+- The container could fail to start with a mount error about
+  `/etc/localtime` ("not a directory"). It bind-mounted the host's clock
+  files, which doesn't work on hosts where `/etc/localtime` isn't a plain
+  file or `/etc/timezone` doesn't exist. Timezone is now set with `TZ` in
+  `.env` (e.g. `TZ=Europe/London`), and the image carries the zoneinfo
+  database so any zone resolves. Existing installs that were working keep
+  working; set `TZ` to be explicit about it.
+
 ## [1.1.11]
 
 ### Changed

@@ -43,6 +43,19 @@ alerts, backups, two-factor sign-in, device keys, quiet hours, is
 configured on the Settings and Devices pages, with a test button beside
 anything that can be tested.
 
+### Set your timezone
+
+CHKT shows and fires reminders in the container's timezone, which is UTC
+unless you say otherwise. If that isn't your timezone, put yours in
+`.env`:
+
+```bash
+echo "TZ=Europe/London" >> .env      # or your zone from the tz database
+```
+
+Then `docker compose up -d`. Without it, a 9am reminder is 9am UTC, which
+won't match the phone.
+
 ### If port 8321 is taken, or your data lives elsewhere
 
 Both are optional and both go in `.env` beside the compose file:
