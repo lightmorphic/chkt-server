@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.1.11]
+
+### Changed
+- CHKT is now published as a container image
+  (`ghcr.io/lightmorphic/chkt-server`) built for amd64 and arm64 on every
+  release. Installing and updating are ordinary pulls, so nothing is
+  compiled on your server and machines without build tooling work too.
+  `docker compose up -d` for a fresh install, `docker compose pull &&
+  docker compose up -d` to update. Building from the source you cloned is
+  still one flag away, via the new `docker-compose.build.yml` override.
+- The published port and the data location can now be set in `.env`
+  (`CHKT_PORT`, `CHKT_DATA`) instead of editing the compose file, and
+  `CHKT_VERSION` pins a specific release for deliberate upgrades or for
+  rolling one back.
+- Removed `deploy.sh`; it drove Docker over ssh on one particular host.
+
+### Fixed
+- The runbook's advice for a lost `SECRET_KEY` understated it: every
+  setting is encrypted, not only the SMTP password and 2FA seed, so all
+  of them reset. It now says so, and suggests leaving `SECRET_KEY` unset
+  so the key lives in `data/` where backups already cover it.
+
 ## [1.1.10]
 
 ### Fixed
