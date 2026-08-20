@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>History</h1>
+<p class="hint">One-time reminders land here once they're done. Open one,
+give it a new date, and it comes back to the main list.</p>
+
+<section class="panel">
+  {% for r in reminders %}
+  <div class="reminder-row">
+    <div class="body">
+      <div class="title"><a href="{{ url_for('views.reminder_edit', reminder_id=r.id) }}">{{ r.title }}</a></div>
+      {% if describe(r) %}<div class="when">{{ describe(r) }}</div>{% endif %}
+      {% if tag_list(r) %}
+      <div class="when">{% for t in tag_list(r) %}#{{ t }} {% endfor %}</div>
+      {% endif %}
+    </div>
+    <a class="btn" href="{{ url_for('views.reminder_edit', reminder_id=r.id) }}">Reuse</a>
+    <form method="post" action="{{ url_for('views.reminder_delete', reminder_id=r.id) }}">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <button class="icon-btn" type="submit" data-confirm
+              aria-label="Delete {{ r.title }}" title="Delete, click again to confirm">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M5 7h14M9 7V4h6v3M7 7l1 13h8l1-13"/>
+        </svg>
+      </button>
+    </form>
+  </div>
+  {% else %}
+  <p class="hint">Nothing here yet. A one-time reminder appears here once
+  it's answered or switched off.</p>
+  {% endfor %}
+</section>
+{% endblock %}

@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.1.14]
+
+### Added
+- History page: one-time reminders leave the main list once they're done
+  (answered or switched off) and live under the new History tab instead.
+  Look back over them, or open one, give it a new date, and it comes
+  back — a finished reminder opens with Active re-ticked and a stale
+  date rolled forward to today, so "pick a date, Save" is the whole
+  gesture. Matching History screen in the app (1.0.17).
+
 ## [1.1.13]
 
 ### Fixed

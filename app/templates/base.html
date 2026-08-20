@@ -22,6 +22,7 @@
   </a>
   <nav aria-label="Main">
     <a href="{{ url_for('views.home') }}" {% if request.endpoint == 'views.home' %}aria-current="page"{% endif %}>Reminders</a>
+    <a href="{{ url_for('views.history') }}" {% if request.endpoint == 'views.history' %}aria-current="page"{% endif %}>History</a>
     <a href="{{ url_for('views.stats') }}" {% if request.endpoint == 'views.stats' %}aria-current="page"{% endif %}>Stats</a>
     <a href="{{ url_for('views.devices') }}" {% if request.endpoint == 'views.devices' %}aria-current="page"{% endif %}>Devices</a>
     <a href="{{ url_for('views.settings_page') }}" {% if request.endpoint == 'views.settings_page' %}aria-current="page"{% endif %}>Settings</a>

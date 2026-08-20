@@ -36,9 +36,9 @@ services:
       # plain HTTP. Leave unset (0) once you're behind HTTPS.
       - CHKT_INSECURE_COOKIES=${CHKT_INSECURE_COOKIES:-0}
       # Your timezone, so reminder times here agree with the phone (e.g.
-      # "9am" means the same 9am, not a UTC 9am). Set TZ in .env, e.g.
-      # TZ=Europe/London. Defaults to UTC.
-      - TZ=${TZ:-UTC}
+      # "9am" means the same 9am, not a UTC 9am). Set CHKT_TZ in .env,
+      # e.g. CHKT_TZ=Europe/London. Defaults to UTC.
+      - TZ=${CHKT_TZ:-UTC}
     volumes:
       # Your database, backups and secret key. Defaults to ./data beside
       # this file; set CHKT_DATA in .env to keep it elsewhere (an absolute

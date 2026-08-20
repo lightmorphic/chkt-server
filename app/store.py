@@ -46,6 +46,20 @@ def next_alert_millis(reminder: dict, now: int = None) -> int:
     return int(nxt.timestamp() * 1000) if nxt is not None else raw
 
 
+def is_spent_one_off(r) -> bool:
+    """A one-time reminder that has had its moment: no repeat rule and no
+    location trigger to bring it back, and switched off (which is what
+    answering a one-off does). These live on the History page rather than
+    the main list — visible to look back on, and reusable by giving them a
+    new date. Mirrors the app's isSpentOneOff."""
+    return (
+        not r["enabled"]
+        and r.get("deleted_at") is None
+        and not (r.get("repeat_rule") or "").strip()
+        and (r.get("location_trigger") or "NONE") == "NONE"
+    )
+
+
 def reminders(include_deleted=False):
     q = ("SELECT * FROM reminders"
          + ("" if include_deleted else " WHERE deleted_at IS NULL"))

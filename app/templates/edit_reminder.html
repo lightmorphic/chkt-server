@@ -122,7 +122,7 @@
     Delete the reminder once dismissed
   </label>
   <label style="display:flex;gap:0.5rem;align-items:center;font-weight:400">
-    <input style="width:auto" type="checkbox" name="active" {% if not reminder or reminder.enabled %}checked{% endif %}>
+    <input style="width:auto" type="checkbox" name="active" {% if reuse or not reminder or reminder.enabled %}checked{% endif %}>
     Active
   </label>
 

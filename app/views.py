@@ -45,10 +45,25 @@ def favicon():
 @login_required
 def home():
     tag = (request.args.get("tag") or "").strip() or None
-    everything = store.reminders()
+    # Spent one-offs live on the History page, not here — the main list is
+    # what's coming up, not what already happened.
+    everything = [r for r in store.reminders() if not store.is_spent_one_off(r)]
     shown = [r for r in everything if tag is None or tag in store.tag_list(r)]
     return render_template(
         "home.html", reminders=shown, tags=store.all_tags(), active_tag=tag,
+        describe=_describe, tag_list=store.tag_list, csrf=csrf_token(),
+    )
+
+
+@bp.get("/history")
+@login_required
+def history():
+    """One-time reminders that have had their moment: look back over them,
+    or open one, give it a new date, and bring it back."""
+    spent = [r for r in store.reminders() if store.is_spent_one_off(r)]
+    spent.sort(key=lambda r: r.get("due_at") or r.get("updated_at") or 0, reverse=True)
+    return render_template(
+        "history.html", reminders=spent,
         describe=_describe, tag_list=store.tag_list, csrf=csrf_token(),
     )
 
@@ -65,12 +80,22 @@ def reminder_edit(reminder_id=None):
             store.upsert_reminder(saved)
             return redirect(url_for("views.home"))
     # One screen with every field for both creating and editing, matching the app.
+    # Reusing from History: pre-arm it so "pick a date, Save" is the whole
+    # gesture — the Active box comes ticked and a past date rolls forward
+    # to today (same time of day). Backing out saves nothing.
+    reuse = reminder is not None and store.is_spent_one_off(reminder)
+    due_local = _millis_to_local(reminder["due_at"]) if reminder and reminder["due_at"] else ""
+    if reuse and due_local:
+        due_date, _, due_time = due_local.partition("T")
+        today = datetime.now().strftime("%Y-%m-%d")
+        if due_date < today:
+            due_local = f"{today}T{due_time}"
     return render_template(
         "edit_reminder.html",
         reminder=reminder, known_tags=store.all_tags(),
-        alert_modes=ALERT_MODES, csrf=csrf_token(),
+        alert_modes=ALERT_MODES, csrf=csrf_token(), reuse=reuse,
         preset_tag=request.args.get("tag", ""),
-        due_local=_millis_to_local(reminder["due_at"]) if reminder and reminder["due_at"] else "",
+        due_local=due_local,
     )
 
 
@@ -79,7 +104,8 @@ def reminder_edit(reminder_id=None):
 def reminder_delete(reminder_id):
     _csrf_or_400()
     store.soft_delete("reminders", reminder_id)
-    return redirect(url_for("views.home"))
+    # Stay where the delete happened (main list or History), like toggle.
+    return redirect(request.referrer or url_for("views.home"))
 
 
 @bp.post("/reminder/<reminder_id>/toggle")
