@@ -45,9 +45,10 @@ def favicon():
 @login_required
 def home():
     tag = (request.args.get("tag") or "").strip() or None
-    # Spent one-offs live on the History page, not here — the main list is
-    # what's coming up, not what already happened.
-    everything = [r for r in store.reminders() if not store.is_spent_one_off(r)]
+    # Ended reminders (answered one-offs, switched-off repeats) live on the
+    # History page, not here — the main list is what's coming up, not what
+    # already happened.
+    everything = [r for r in store.reminders() if not store.is_ended(r)]
     shown = [r for r in everything if tag is None or tag in store.tag_list(r)]
     return render_template(
         "home.html", reminders=shown, tags=store.all_tags(), active_tag=tag,
@@ -58,12 +59,13 @@ def home():
 @bp.get("/history")
 @login_required
 def history():
-    """One-time reminders that have had their moment: look back over them,
-    or open one, give it a new date, and bring it back."""
-    spent = [r for r in store.reminders() if store.is_spent_one_off(r)]
-    spent.sort(key=lambda r: r.get("due_at") or r.get("updated_at") or 0, reverse=True)
+    """Reminders that have ended — answered one-offs and switched-off
+    repeats: look back over them, or open one, give it a new date, and
+    bring it back."""
+    ended = [r for r in store.reminders() if store.is_ended(r)]
+    ended.sort(key=lambda r: r.get("due_at") or r.get("updated_at") or 0, reverse=True)
     return render_template(
-        "history.html", reminders=spent,
+        "history.html", reminders=ended,
         describe=_describe, tag_list=store.tag_list, csrf=csrf_token(),
     )
 
@@ -83,7 +85,7 @@ def reminder_edit(reminder_id=None):
     # Reusing from History: pre-arm it so "pick a date, Save" is the whole
     # gesture — the Active box comes ticked and a past date rolls forward
     # to today (same time of day). Backing out saves nothing.
-    reuse = reminder is not None and store.is_spent_one_off(reminder)
+    reuse = reminder is not None and store.is_ended(reminder)
     due_local = _millis_to_local(reminder["due_at"]) if reminder and reminder["due_at"] else ""
     if reuse and due_local:
         due_date, _, due_time = due_local.partition("T")

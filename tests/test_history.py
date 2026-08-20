@@ -46,20 +46,22 @@ class HistoryTest(unittest.TestCase):
         store.upsert_reminder(_reminder("paused-daily", "Stretch", enabled=False, repeat_rule="DAILY"))
 
     def test_predicate(self):
-        self.assertTrue(store.is_spent_one_off(_reminder("x", "t", enabled=False)))
-        self.assertFalse(store.is_spent_one_off(_reminder("x", "t", enabled=True)))
-        self.assertFalse(store.is_spent_one_off(_reminder("x", "t", enabled=False, repeat_rule="DAILY")))
-        self.assertFalse(store.is_spent_one_off(_reminder("x", "t", enabled=False, location_trigger="ARRIVE")))
+        self.assertTrue(store.is_ended(_reminder("x", "t", enabled=False)))
+        # Switched-off repeating and location reminders have ended too.
+        self.assertTrue(store.is_ended(_reminder("x", "t", enabled=False, repeat_rule="DAILY")))
+        self.assertTrue(store.is_ended(_reminder("x", "t", enabled=False, location_trigger="ARRIVE")))
+        self.assertFalse(store.is_ended(_reminder("x", "t", enabled=True)))
+        self.assertFalse(store.is_ended(_reminder("x", "t", enabled=True, repeat_rule="DAILY")))
 
-    def test_main_list_hides_spent_history_shows_it(self):
+    def test_main_list_hides_ended_history_shows_them(self):
         home = self.client.get("/").get_data(as_text=True)
         history = self.client.get("/history").get_data(as_text=True)
         self.assertNotIn("Collect parcel", home)
+        self.assertNotIn("Stretch", home)  # switched-off repeat is history too
         self.assertIn("Water plants", home)
-        self.assertIn("Stretch", home)  # paused repeating stays on the main list
         self.assertIn("Collect parcel", history)
+        self.assertIn("Stretch", history)
         self.assertNotIn("Water plants", history)
-        self.assertNotIn("Stretch", history)
 
     def test_reuse_prearms_the_edit_form(self):
         html = self.client.get("/reminder/spent/edit").get_data(as_text=True)

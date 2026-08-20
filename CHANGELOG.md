@@ -1,5 +1,13 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+- History now takes every ended reminder, not just one-times: a repeating
+  or location reminder you switch off moves there too, instead of sitting
+  at the bottom of the main list. Reuse works the same way. Matches the
+  same change in the app.
+
 ## [1.1.15]
 
 ### Changed

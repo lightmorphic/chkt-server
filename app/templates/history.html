@@ -1,8 +1,9 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>History</h1>
-<p class="hint">One-time reminders land here once they're done. Open one,
-give it a new date, and it comes back to the main list.</p>
+<p class="hint">Reminders land here once they've ended — one-times that
+happened and repeats you've switched off. Open one, give it a new date,
+and it comes back to the main list.</p>
 
 <section class="panel">
   {% for r in reminders %}
@@ -27,8 +28,8 @@ give it a new date, and it comes back to the main list.</p>
     </form>
   </div>
   {% else %}
-  <p class="hint">Nothing here yet. A one-time reminder appears here once
-  it's answered or switched off.</p>
+  <p class="hint">Nothing here yet. A reminder appears here once it's
+  answered or switched off.</p>
   {% endfor %}
 </section>
 {% endblock %}
