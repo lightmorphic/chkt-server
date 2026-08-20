@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Deploy CHKT Server to the VPS. One command: ./deploy.sh
+# Deploy CHKT Server to the homelab. One command: ./deploy.sh
 #
 # Target: the homelab, reached over Tailscale via the "homelab" ssh alias.
 set -euo pipefail

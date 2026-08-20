@@ -19,6 +19,26 @@ def next_after(rule: str, previous: datetime, after: datetime):
         return None
     kind, _, arg = rule.partition(":")
 
+    # Do the calendar arithmetic on naive wall-clock values. An aware
+    # datetime from .astimezone() carries a FIXED utc offset, so stepping it
+    # across a DST change keeps the old offset and lands an hour off (a
+    # daily 9:00 firing at 8:00/10:00 on changeover day). Naive wall-time
+    # math plus re-localising at the end (naive .astimezone() applies the
+    # offset correct for THAT date) matches the app's ZonedDateTime maths.
+    was_aware = previous.tzinfo is not None or after.tzinfo is not None
+    if previous.tzinfo is not None:
+        previous = previous.astimezone().replace(tzinfo=None)
+    if after.tzinfo is not None:
+        after = after.astimezone().replace(tzinfo=None)
+
+    result = _next_after_naive(kind, arg, previous, after)
+    if result is None:
+        return None
+    return result.astimezone() if was_aware else result
+
+
+def _next_after_naive(kind: str, arg: str, previous: datetime, after: datetime):
+
     if kind == "DAILY":
         candidate = after.replace(hour=previous.hour, minute=previous.minute, second=0, microsecond=0)
         if candidate <= after:

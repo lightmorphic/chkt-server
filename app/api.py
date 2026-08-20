@@ -44,7 +44,21 @@ def sync():
             # nag_started_at tracks this server's own in-progress re-alert
             # cycle; the app never sends it (it isn't in the JSON contract),
             # so a sync merge must never clobber it with the null default.
-            incoming["nag_started_at"] = existing["nag_started_at"] if existing else None
+            # BUT when the incoming record shows the occurrence itself moved
+            # on — answered (due_at advanced / disabled) or snoozed on the
+            # phone — the server's nag cycle for the old occurrence must end
+            # with it, or it would keep pushing re-alerts for a reminder
+            # that was already dealt with.
+            occurrence_moved = existing is not None and (
+                incoming["due_at"] != existing["due_at"]
+                or incoming["snoozed_until"] != existing["snoozed_until"]
+                or not incoming["enabled"]
+            )
+            if occurrence_moved:
+                incoming["nag_started_at"] = None
+                store.clear_fired(incoming["id"])
+            else:
+                incoming["nag_started_at"] = existing["nag_started_at"] if existing else None
             store.upsert_reminder(incoming)
 
     for record in body.get("logs") or []:

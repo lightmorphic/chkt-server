@@ -46,11 +46,17 @@ cp Caddyfile.example Caddyfile
 # edit Caddyfile: put your domain in place of chkt.example.com,
 # and point that domain's DNS A record at this server first
 
+# On the public internet a stranger could reach a fresh install's setup
+# page before you do. This token means only you can create the account:
+echo "CHKT_SETUP_TOKEN=$(python3 -c 'import secrets; print(secrets.token_urlsafe(16))')" >> .env
+
 docker compose -f docker-compose.yml -f docker-compose.https.yml up -d --build
 ```
 
 Caddy requests and renews the certificate itself; there's nothing else to
-set up.
+set up. With the override active, only Caddy is reachable from outside —
+the app's plain-HTTP port isn't published. On first visit, create your
+account at `https://your.domain/setup?setup_token=<the token from .env>`.
 
 ### If you do want to set your own secret key
 

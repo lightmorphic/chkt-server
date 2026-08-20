@@ -176,8 +176,23 @@ def last_fired_at(reminder_id: str):
 def touch_fired(reminder_id: str, due_at: int, quiet: bool = False):
     """Refresh the fire timestamp for a nag re-alert so pollers re-announce it."""
     with db.connect() as conn:
-        conn.execute("UPDATE fired SET fired_at = ?, quiet = ? WHERE reminder_id = ? AND due_at = ?",
-                     (db.now_millis(), 1 if quiet else 0, reminder_id, due_at))
+        cur = conn.execute("UPDATE fired SET fired_at = ?, quiet = ? WHERE reminder_id = ? AND due_at = ?",
+                           (db.now_millis(), 1 if quiet else 0, reminder_id, due_at))
+        if cur.rowcount == 0:
+            # No row for this occurrence (e.g. due_at moved underneath a
+            # nag cycle): insert instead, so last_fired_at still advances —
+            # otherwise the nag interval test would pass on every 20-second
+            # tick and spam a push each time.
+            conn.execute(
+                "INSERT OR IGNORE INTO fired (reminder_id, due_at, fired_at, quiet) VALUES (?,?,?,?)",
+                (reminder_id, due_at, db.now_millis(), 1 if quiet else 0))
+
+
+def clear_fired(reminder_id: str):
+    """Forget fire records for a reminder whose occurrence moved on (sync
+    told us it was answered elsewhere); the next occurrence starts clean."""
+    with db.connect() as conn:
+        conn.execute("DELETE FROM fired WHERE reminder_id = ?", (reminder_id,))
 
 
 def due_now():

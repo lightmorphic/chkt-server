@@ -44,7 +44,14 @@ def public_key() -> str:
 
 
 def add_subscription(subscription: dict):
+    """One row per endpoint: the page re-subscribes on every load, and
+    without the replace this grew a duplicate row (and a duplicate push
+    per fire) each time."""
     with db.connect() as conn:
+        conn.execute(
+            "DELETE FROM push_subscriptions WHERE json_extract(subscription_json, '$.endpoint') = ?",
+            (subscription.get("endpoint"),),
+        )
         conn.execute(
             "INSERT INTO push_subscriptions (id, subscription_json, created_at) VALUES (?,?,?)",
             (db.new_id(), json.dumps(subscription), db.now_millis()),
@@ -89,10 +96,27 @@ def recently_fired(since_millis: int):
         return [dict(r) for r in rows]
 
 
+def _prune(now: int):
+    """Housekeeping once a day: fire records and sent mail have no value
+    after a week / a month, and nothing else ever deletes them."""
+    last = setting("last_prune_at")
+    if last and now - int(last) < 24 * 3600 * 1000:
+        return
+    setting_put("last_prune_at", str(now))
+    with db.connect() as conn:
+        conn.execute("DELETE FROM fired WHERE fired_at < ?", (now - 7 * 24 * 3600 * 1000,))
+    try:
+        with db.connect() as conn:
+            conn.execute("DELETE FROM mail_outbox WHERE at < ?", (now - 30 * 24 * 3600 * 1000,))
+    except Exception:
+        pass  # table only exists once the first email has been sent
+
+
 def _loop():
     while True:
         try:
             now = db.now_millis()
+            _prune(now)
             # Computed once per tick: same window used for every reminder
             # that fires in this pass, same as the app checking it once per alert.
             quiet = quiet_hours_now()

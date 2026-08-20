@@ -25,8 +25,12 @@ class DevicesStatusTest(unittest.TestCase):
         os.environ["CHKT_BACKUP_DIR"] = os.path.join(_tmp, "backups")
         cls.app = create_app()
         cls.client = cls.app.test_client()
-        # Create the one account this server supports.
+        # Create the one account this server supports, the way a browser
+        # does: fetch the form for its CSRF token, then submit with it.
+        setup_html = cls.client.get("/setup").get_data(as_text=True)
+        csrf = re.search(r'name="csrf" value="([^"]+)"', setup_html).group(1)
         cls.client.post("/setup", data={
+            "csrf": csrf,
             "username": "devtest", "password": "local-dev-smoke-test-1",
             "confirm": "local-dev-smoke-test-1",
         })

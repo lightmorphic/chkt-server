@@ -1,5 +1,48 @@
 # Changelog
 
+## [1.1.10]
+
+### Fixed
+- Answering a nagging reminder on the phone didn't stop the server's
+  re-alert cycle: the sync merge preserved the server's nag state (the
+  1.1.8 fix) even when the incoming record showed the occurrence had been
+  answered or snoozed, and the mismatched fire-tracking then degenerated
+  into a push every 20 seconds until the nag timeout, ending in a spurious
+  MISSED log. A sync that advances, snoozes, or disables a reminder now
+  ends the server's nag cycle for it; an unrelated edit still doesn't.
+- Repeating reminders crossing a daylight-saving change landed an hour
+  off for that day (the repeat engine stepped fixed-offset datetimes);
+  arithmetic is now done in wall-clock time and re-localised, matching
+  the app.
+- Every page load added a duplicate push subscription row (and a
+  duplicate push per fire, invisibly collapsed by the browser); one row
+  per endpoint now.
+- The stats page showed a stray ", " when there was no completion rate.
+
+### Security
+- Login and 2FA are rate-limited: 5 failures per address per 15 minutes,
+  closing off sustained online guessing of the password or 6-digit code.
+- TOTP codes are single-use; a code that already signed in can't be
+  replayed inside its validity window.
+- The login, setup, and logout forms now carry CSRF tokens like every
+  other form.
+- New optional `CHKT_SETUP_TOKEN`: on a public install, first-run account
+  creation requires the token, so a stranger can't claim a fresh server.
+- The HTTPS overlay no longer leaves plain-HTTP port 8321 published on
+  the host; everything goes through Caddy.
+- The container drops all Linux capabilities and forbids privilege
+  escalation; gunicorn updated to 23.0.0 (request-smuggling fix,
+  CVE-2024-6827).
+- Web-push subscriptions must be HTTPS endpoints; the push engine can't
+  be pointed at arbitrary URLs.
+- SECURITY.md now describes the deployment model accurately (the old
+  text claimed a localhost-only bind that was never true).
+
+### Housekeeping
+- Old fire records and sent mail are pruned automatically (7/30 days).
+- Removed dead code (unused JSON helpers, unused imports) and the stale
+  "VPS" wording in deploy.sh.
+
 ## [1.1.9]
 
 ### Fixed

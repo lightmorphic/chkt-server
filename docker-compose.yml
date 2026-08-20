@@ -3,6 +3,12 @@ services:
     build: .
     container_name: chkt-server
     restart: unless-stopped
+    # Nothing in CHKT needs elevated privileges: no privilege escalation
+    # inside the container, and no Linux capabilities at all.
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     ports:
       - "8321:8321"
     environment:

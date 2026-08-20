@@ -1,6 +1,6 @@
 """Web UI routes. Server-rendered pages, no framework, house style."""
+import hmac
 import io
-import json
 from datetime import datetime
 
 import pyotp
@@ -11,7 +11,7 @@ from . import backup, db, pushsvc, store
 from .auth import (check_csrf, csrf_token, list_access_keys, login_required,
                    new_access_key, revoke_access_key)
 from .emailer import outbox, send as send_email
-from .settings_store import SECRET_KEYS, get as setting, put as setting_put, save_form
+from .settings_store import get as setting, put as setting_put, save_form
 
 bp = Blueprint("views", __name__)
 
@@ -110,7 +110,10 @@ def reminder_done(reminder_id):
 @login_required
 def reminder_snooze(reminder_id):
     _csrf_or_400()
-    minutes = int(request.form.get("minutes") or 10)
+    try:
+        minutes = int(request.form.get("minutes") or 10)
+    except ValueError:
+        minutes = 10
     r = store.get_reminder(reminder_id)
     if r and 1 <= minutes <= 1440:
         store.add_log(reminder_id, r.get("due_at") or db.now_millis(), "SNOOZED")
@@ -296,10 +299,14 @@ def web_vapid():
 @bp.post("/web/subscribe")
 @login_required
 def web_subscribe():
-    if request.headers.get("X-CSRF", "") != session.get("csrf", "-"):
+    if not hmac.compare_digest(request.headers.get("X-CSRF", ""), session.get("csrf", "-")):
         abort(400)
     sub = request.get_json(silent=True)
-    if sub and "endpoint" in sub:
+    # The endpoint is a URL the engine will POST to on every fire — accept
+    # only HTTPS push-service endpoints, never something else to aim the
+    # server at.
+    endpoint = (sub or {}).get("endpoint") or ""
+    if isinstance(endpoint, str) and endpoint.startswith("https://"):
         pushsvc.add_subscription(sub)
         return jsonify({"ok": True})
     return jsonify({"ok": False}), 400
@@ -308,7 +315,10 @@ def web_subscribe():
 @bp.get("/web/fired")
 @login_required
 def web_fired():
-    since = int(request.args.get("since") or db.now_millis())
+    try:
+        since = int(request.args.get("since") or db.now_millis())
+    except ValueError:
+        since = db.now_millis()
     return jsonify({"now": db.now_millis(), "fired": pushsvc.recently_fired(since)})
 
 

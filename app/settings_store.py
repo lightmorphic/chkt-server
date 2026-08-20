@@ -2,7 +2,6 @@
 a page, the UI shows a mask, and saving an empty field keeps the old value.
 """
 import datetime
-import json
 
 from . import db
 from .crypto import decrypt, encrypt
@@ -29,20 +28,6 @@ def put(key: str, value: str):
             "ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at",
             (key, encrypt(value), db.now_millis()),
         )
-
-
-def get_json(key: str, default=None):
-    raw = get(key, "")
-    if not raw:
-        return default
-    try:
-        return json.loads(raw)
-    except ValueError:
-        return default
-
-
-def put_json(key: str, value):
-    put(key, json.dumps(value))
 
 
 def save_form(form, keys):

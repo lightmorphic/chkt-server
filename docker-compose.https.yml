@@ -8,13 +8,22 @@
 # domain's DNS A record at this server first (Caddy needs to be reachable
 # on the internet to get a certificate).
 #
-# Port 8321 stays reachable directly too (Compose adds to the base file's
-# ports rather than replacing them). To close it off and force everything
-# through Caddy, remove the "ports" line from docker-compose.yml.
+# With this overlay, everything goes through Caddy: the app's plain-HTTP
+# port 8321 is no longer published on the host (Caddy reaches it over the
+# internal compose network), so the login form and sync API can't be hit
+# over unencrypted HTTP from outside. (The "!override" tag needs Docker
+# Compose v2.24+; on older versions, remove the "ports" lines here AND in
+# docker-compose.yml instead.)
+#
+# Public internet also means strangers can find a fresh install before you
+# do — set CHKT_SETUP_TOKEN in .env before first start, then create your
+# account at /setup?setup_token=<that value>.
 services:
   chkt:
     environment:
       - CHKT_INSECURE_COOKIES=0
+      - CHKT_SETUP_TOKEN=${CHKT_SETUP_TOKEN:-}
+    ports: !override []
 
   caddy:
     image: caddy:2-alpine
