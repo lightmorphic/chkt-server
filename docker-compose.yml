@@ -18,9 +18,13 @@ services:
       # always listens on 8321 inside.
       - "${CHKT_PORT:-8321}:8321"
     environment:
-      # Optional. Leave unset and CHKT generates one on first start, saved
-      # in ./data so it survives restarts and rebuilds. Set your own in
-      # .env only if you need a specific key (e.g. migrating a server).
+      # Best left alone. CHKT needs a secret key (it encrypts your saved
+      # settings and signs your login cookie), and with no SECRET_KEY set
+      # it generates one on first start and keeps it in the data folder,
+      # alongside the database your backups already cover. Setting one in
+      # .env instead means a deleted or tidied .env loses it, and with it
+      # every stored setting. Only set it to carry an existing key to a
+      # new server without bringing the data folder along.
       - SECRET_KEY=${SECRET_KEY:-}
       # Set to 1 in .env when serving plain HTTP inside a trusted network
       # (e.g. Tailscale, a home LAN); browsers refuse Secure cookies over

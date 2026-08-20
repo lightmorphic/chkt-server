@@ -28,7 +28,9 @@ docker compose up -d
 ```
 
 That pulls a prebuilt image, so nothing is compiled on your server and it
-works on machines with no build tooling. Prefer to build it yourself from
+works on machines with no build tooling. CHKT generates its own secret key
+on first start and keeps it in the data folder, so there is nothing to set
+up and nothing to lose track of. Prefer to build it yourself from
 the source you just cloned? Add the build override:
 
 ```bash
