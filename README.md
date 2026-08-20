@@ -100,14 +100,21 @@ Only needed if you're migrating an existing server to a new machine and
 want to keep the same key (so encrypted settings still decrypt):
 
 ```bash
-echo "SECRET_KEY=$(python3 -c 'import secrets; print(secrets.token_urlsafe(48))')" > .env
-docker compose up -d --build
+echo "CHKT_SECRET_KEY=$(python3 -c 'import secrets; print(secrets.token_urlsafe(48))')" >> .env
+docker compose up -d
 ```
 
-`SECRET_KEY` is the only secret that ever lives in the environment. Every
-other credential you enter is stored encrypted with a key derived from it,
-so a stolen copy of the database alone gives up nothing. **Don't lose or
-change it once it's set**: stored settings can't be decrypted without it.
+Note the name: `CHKT_SECRET_KEY`, not `SECRET_KEY`. Compose lets the
+environment it runs in override your `.env`, and some stack managers run
+compose with a `SECRET_KEY` of their own — which would silently become
+CHKT's, and change under you.
+
+The key is the only secret that ever lives in the environment. Every other
+credential you enter is stored encrypted with a key derived from it, so a
+stolen copy of the database alone gives up nothing. **Don't lose or change
+it once it's set**: stored settings can't be decrypted without it. Which is
+why leaving it unset, so CHKT keeps its own in `data/`, is the easier
+arrangement for most people.
 
 ## Connect your phone
 
@@ -125,7 +132,7 @@ what to do when something misbehaves, written for humans, no jargon.
 ```bash
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
-echo "SECRET_KEY=dev-only-$(date +%s)" > .env
+echo "SECRET_KEY=dev-only-$(date +%s)" > .env   # app reads SECRET_KEY directly
 .venv/bin/python run.py            # http://127.0.0.1:8321
 .venv/bin/python -m unittest discover -s tests
 ```

@@ -19,13 +19,18 @@ services:
       - "${CHKT_PORT:-8321}:8321"
     environment:
       # Best left alone. CHKT needs a secret key (it encrypts your saved
-      # settings and signs your login cookie), and with no SECRET_KEY set
-      # it generates one on first start and keeps it in the data folder,
+      # settings and signs your login cookie), and with none supplied it
+      # generates one on first start and keeps it in the data folder,
       # alongside the database your backups already cover. Setting one in
       # .env instead means a deleted or tidied .env loses it, and with it
-      # every stored setting. Only set it to carry an existing key to a
-      # new server without bringing the data folder along.
-      - SECRET_KEY=${SECRET_KEY:-}
+      # every stored setting. Only set CHKT_SECRET_KEY to carry an
+      # existing key to a new server without its data folder.
+      #
+      # Read from CHKT_SECRET_KEY, not SECRET_KEY: compose lets the
+      # surrounding environment win over .env, and some stack managers run
+      # compose with a SECRET_KEY of their own set, which would silently
+      # become CHKT's.
+      - SECRET_KEY=${CHKT_SECRET_KEY:-}
       # Set to 1 in .env when serving plain HTTP inside a trusted network
       # (e.g. Tailscale, a home LAN); browsers refuse Secure cookies over
       # plain HTTP. Leave unset (0) once you're behind HTTPS.

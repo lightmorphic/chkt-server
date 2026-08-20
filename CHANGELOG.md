@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.13]
+
+### Fixed
+- The secret key could be silently taken from the surrounding
+  environment. Compose lets the environment it runs in override a
+  stack's `.env`, so a stack manager that has its own `SECRET_KEY` set
+  passed that key to CHKT — CHKT then never generated its own, and
+  saved settings appeared to reset whenever that other key changed. The
+  compose file now reads `CHKT_SECRET_KEY`, which nothing else is likely
+  to define. Set `CHKT_SECRET_KEY` in `.env` if you supply your own key;
+  leaving it unset is still the recommended arrangement.
+
 ## [1.1.12]
 
 ### Fixed

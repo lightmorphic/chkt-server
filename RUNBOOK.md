@@ -72,8 +72,8 @@ encrypted. What you lose is everything on the Settings page: it is all
 stored encrypted, so with a new key it reads as blank and reverts to
 defaults. The old values stay in the database, just unreadable.
 
-Set a new key (or simply leave `SECRET_KEY` unset and let CHKT generate
-one into `data/.secret_key`), restart, then:
+Set a new key in `CHKT_SECRET_KEY` (or simply leave it unset and let
+CHKT generate one into `data/.secret_key`), restart, then:
 
 1. Re-enter the Settings page, including SMTP host, port, from-address
    and password, and quiet hours.
@@ -84,7 +84,7 @@ one into `data/.secret_key`), restart, then:
 You are not locked out: your username and password live outside the
 encrypted settings.
 
-Safest place for the key is nowhere at all — leave `SECRET_KEY` unset and
+Safest place for the key is nowhere at all — leave `CHKT_SECRET_KEY` unset and
 it lives in `data/`, which your backups already cover. A key set in `.env`
 disappears the day someone tidies that file.
 
