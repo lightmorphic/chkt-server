@@ -38,9 +38,21 @@ if [ ! -f .env ]; then
 fi
 
 PORT="$(sed -n 's/^CHKT_PORT=//p' .env | head -n1)"
-PORT="${PORT:-8321}"
 DATA="$(sed -n 's/^CHKT_DATA=//p' .env | head -n1)"
-DATA="${DATA:-./data}"
+
+# Be strict about both, rather than falling back to the defaults a fresh
+# clone gets. On a host that has been running elsewhere, a silent fallback
+# means the app comes up healthy on the wrong port and, worse, on whatever
+# happens to be sitting in ./data — which looks fine until someone notices
+# their reminders are missing.
+if [ -z "$DATA" ] || [ -z "$PORT" ]; then
+  echo "This host's .env must set both CHKT_PORT and CHKT_DATA — refusing to deploy." >&2
+  if sed -n 's/^PORT=\(.*\)/\1/p' .env | grep -q .; then
+    echo "Found a bare PORT= line: that was the old stack file's name." >&2
+    echo "Rename it to CHKT_PORT= and add CHKT_DATA=." >&2
+  fi
+  exit 1
+fi
 
 if [ ! -d "$DATA" ]; then
   echo "CHKT_DATA points at $DATA, which does not exist — refusing to deploy." >&2
