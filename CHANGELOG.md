@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.1.15]
+
+### Changed
+- The timezone is now set with `CHKT_TZ` rather than `TZ`, for the same
+  reason `CHKT_SECRET_KEY` replaced `SECRET_KEY` in 1.1.13: a plain name
+  can be claimed by whatever runs compose, which then overrides your
+  `.env` without saying so. A timezone that silently isn't yours means
+  every reminder fires at the wrong hour. Every setting CHKT reads from
+  `.env` is now `CHKT_`-prefixed.
+- Added `.env.example`, an annotated list of every setting with its
+  default, and a matching table in the README, so the knobs are in one
+  place rather than scattered through prose.
+
 ## [1.1.14]
 
 ### Added

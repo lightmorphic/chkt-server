@@ -6,7 +6,7 @@ import threading
 import time
 import urllib.request
 
-VERSION = "1.1.14"
+VERSION = "1.1.15"
 RELEASES_URL = "https://api.github.com/repos/lightmorphic/chkt-server/releases/latest"
 
 _cache = {"checked_at": 0.0, "latest": None}
