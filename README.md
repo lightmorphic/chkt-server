@@ -35,6 +35,19 @@ alerts, backups, two-factor sign-in, device keys, quiet hours, is
 configured on the Settings and Devices pages, with a test button beside
 anything that can be tested.
 
+### If port 8321 is taken, or your data lives elsewhere
+
+Both are optional and both go in `.env` beside the compose file:
+
+```bash
+echo "CHKT_PORT=4010" >> .env                     # host port; inside stays 8321
+echo "CHKT_DATA=/opt/chkt-server/data" >> .env    # where the database lives
+```
+
+Then `docker compose up -d --build` as usual. Leave them unset and you get
+8321 and `./data`, as above. Changing `CHKT_DATA` later points the app at a
+different folder — move the old one across first, or it starts empty.
+
 ### Putting it on the internet with a domain
 
 The steps above are enough for your home network or a Tailscale-style

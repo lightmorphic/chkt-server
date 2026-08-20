@@ -10,7 +10,10 @@ services:
     cap_drop:
       - ALL
     ports:
-      - "8321:8321"
+      # Host port only. Defaults to 8321; set CHKT_PORT in .env if that
+      # port is taken or your host has its own convention. The container
+      # always listens on 8321 inside.
+      - "${CHKT_PORT:-8321}:8321"
     environment:
       # Optional. Leave unset and CHKT generates one on first start, saved
       # in ./data so it survives restarts and rebuilds. Set your own in
@@ -21,7 +24,12 @@ services:
       # plain HTTP. Leave unset (0) once you're behind HTTPS.
       - CHKT_INSECURE_COOKIES=${CHKT_INSECURE_COOKIES:-0}
     volumes:
-      - ./data:/data
+      # Your database, backups and secret key. Defaults to ./data beside
+      # this file; set CHKT_DATA in .env to keep it elsewhere (an absolute
+      # path is fine). Whatever you choose, keep it consistent — pointing
+      # this somewhere new starts the app with an empty database while the
+      # old one sits unused.
+      - "${CHKT_DATA:-./data}:/data"
       # Match the host's timezone, so reminder times shown here agree with
       # the phone (e.g. "9am" means the same 9am, not a UTC 9am).
       - /etc/localtime:/etc/localtime:ro
