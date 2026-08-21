@@ -100,6 +100,22 @@ def check_csrf():
     return hmac.compare_digest(sent, session.get("csrf", "-"))
 
 
+def _credentials_ok(account, username: str, password: str) -> bool:
+    """Username and password check that costs the same whether the username
+    was right or not. Short-circuiting on the username made a wrong username
+    fail fast and the right one wait for scrypt — a timing tell revealing
+    the one valid username to anyone with a stopwatch."""
+    name_ok = bool(account) and hmac.compare_digest(username, account["username"])
+    hash_to_check = account["password_hash"] if name_ok else _DUMMY_HASH
+    password_ok = check_password_hash(hash_to_check, password)
+    return name_ok and password_ok
+
+
+# A real scrypt hash of a throwaway value, so the dummy check above does the
+# same work as a genuine one.
+_DUMMY_HASH = generate_password_hash("chkt-timing-equalizer", method="scrypt")
+
+
 def _setup_token_ok() -> bool:
     """Optional gate for internet-facing installs: when CHKT_SETUP_TOKEN is
     set, first-run account creation needs that token (?setup_token=...), so
@@ -107,7 +123,12 @@ def _setup_token_ok() -> bool:
     (the private-network default), setup stays open exactly as before."""
     required = os.environ.get("CHKT_SETUP_TOKEN", "")
     if not required:
-        return True
+        # No token configured. On the private-network posture (plain HTTP,
+        # CHKT_INSECURE_COOKIES=1) setup stays open — that install isn't
+        # reachable by strangers. On the HTTPS posture the server may be on
+        # the open internet, where an unclaimed /setup is a race between the
+        # owner and whoever finds it first; require the token there.
+        return os.environ.get("CHKT_INSECURE_COOKIES") == "1"
     supplied = request.args.get("setup_token") or request.form.get("setup_token") or ""
     return hmac.compare_digest(supplied, required)
 
@@ -117,8 +138,10 @@ def setup():
     if account_exists():
         return redirect(url_for("auth.login"))
     if not _setup_token_ok():
-        return ("This server requires a setup token. Open /setup?setup_token=... "
-                "with the token from your CHKT_SETUP_TOKEN setting.", 403)
+        return ("First-run setup on an HTTPS-facing server needs a setup token, "
+                "so a stranger can't claim the account before you do. Set "
+                "CHKT_SETUP_TOKEN in .env (see README), restart, then open "
+                "/setup?setup_token=<that value>.", 403)
     error = ""
     if request.method == "POST":
         username = (request.form.get("username") or "").strip()
@@ -157,8 +180,7 @@ def login():
             error = _EXPIRED_MESSAGE
         elif _throttled():
             error = _THROTTLED_MESSAGE
-        elif account and hmac.compare_digest(username, account["username"]) \
-                and check_password_hash(account["password_hash"], password):
+        elif _credentials_ok(account, username, password):
             _clear_failures()
             totp_secret = setting_get("totp_secret")
             if totp_secret:

@@ -68,7 +68,7 @@ def _next_after_naive(kind: str, arg: str, previous: datetime, after: datetime):
         for _ in range(13):
             month_len = calendar.monthrange(year, month)[1]
             actual = month_len if last else min(day, month_len)
-            candidate = datetime(year, month, actual, previous.hour, previous.minute, tzinfo=after.tzinfo)
+            candidate = datetime(year, month, actual, previous.hour, previous.minute)
             if candidate > after:
                 return candidate
             month += 1
@@ -88,7 +88,7 @@ def _next_after_naive(kind: str, arg: str, previous: datetime, after: datetime):
         for _ in range(2):
             month_len = calendar.monthrange(year, month)[1]
             candidate = datetime(year, month, min(day, month_len),
-                                 previous.hour, previous.minute, tzinfo=after.tzinfo)
+                                 previous.hour, previous.minute)
             if candidate > after:
                 return candidate
             year += 1

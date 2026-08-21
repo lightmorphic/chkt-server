@@ -3,7 +3,7 @@
 <h1 data-live-list>Coming up</h1>
 
 {% if tags %}
-<nav aria-label="Filter by tag" style="display:flex;gap:0.5rem;flex-wrap:wrap">
+<nav aria-label="Filter by tag" class="chip-row">
   <a class="btn{% if not active_tag %} btn-primary{% endif %}" href="{{ url_for('views.home') }}">All</a>
   {% for t in tags %}
   <a class="btn{% if active_tag == t %} btn-primary{% endif %}" href="{{ url_for('views.home', tag=t) }}">#{{ t }}</a>

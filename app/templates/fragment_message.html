@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
-<section class="panel" style="max-width:32rem">
+<section class="panel panel-32">
   <p class="msg {{ 'ok' if ok else 'bad' }}">{{ '✓' if ok else '!' }} {{ message }}</p>
-  <p style="margin-bottom:0"><a class="btn" href="{{ request.referrer or url_for('views.settings_page') }}">Back</a></p>
+  <p class="tight"><a class="btn" href="{{ request.referrer or url_for('views.settings_page') }}">Back</a></p>
 </section>
 {% endblock %}

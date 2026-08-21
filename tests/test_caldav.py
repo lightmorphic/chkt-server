@@ -166,6 +166,16 @@ class CalDavTest(unittest.TestCase):
         self._dav(CAL + "weekly.ics", "PUT", ics)
         self.assertEqual("WEEKLY:MON,WED", store.get_reminder("weekly")["repeat_rule"])
 
+    def test_13b_nonsense_date_is_refused_not_crashed(self):
+        """Month 13, hour 25: passes the digit shape, fails strptime. Used
+        to escape as a 500 on the one internet-facing endpoint."""
+        for bad in ("20261332T250000", "20260230T120000"):
+            ics = EVENT_ICS.format(uid="baddate", summary="Bad date",
+                                   start=bad, extra="")
+            r = self._dav(CAL + "baddate.ics", "PUT", ics)
+            self.assertEqual(403, r.status_code, bad)
+        self.assertIsNone(store.get_reminder("baddate"))
+
     def test_14_event_without_a_start_is_refused(self):
         ics = ("BEGIN:VCALENDAR\r\nBEGIN:VEVENT\r\nUID:x\r\nSUMMARY:No time\r\n"
                "END:VEVENT\r\nEND:VCALENDAR\r\n")

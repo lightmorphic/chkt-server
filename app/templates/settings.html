@@ -5,8 +5,9 @@
 {% if message %}<p class="msg ok">✓ {{ message }}</p>{% endif %}
 {% if update_available %}
 <p class="msg ok">✓ CHKT Server {{ update_available }} is available (you're on {{ server_version }}).
-Update from the server folder with: <code>git pull && docker compose up -d --build</code>,
-or rerun <code>deploy.sh</code>. Your data is untouched either way.</p>
+Update from the server folder with: <code>docker compose pull && docker compose up -d</code>
+(add <code>-f docker-compose.build.yml --build</code> if you build from source).
+Your data is untouched either way.</p>
 {% endif %}
 
 <div class="list-grid">
@@ -35,7 +36,7 @@ or rerun <code>deploy.sh</code>. Your data is untouched either way.</p>
       <label for="s-pass">SMTP password {% if smtp_password_set %}<span class="badge">saved</span>{% endif %}</label>
       <input id="s-pass" name="smtp_password" type="password"
              placeholder="{{ '••••••••  (leave blank to keep)' if smtp_password_set else '' }}">
-      <p style="margin-bottom:0">
+      <p class="tight">
         <button class="btn-primary" type="submit">Save email settings</button>
         <button type="submit" formaction="{{ url_for('views.settings_test_email') }}">Send a test email</button>
       </p>
@@ -57,8 +58,8 @@ or rerun <code>deploy.sh</code>. Your data is untouched either way.</p>
     <form method="post">
       <input type="hidden" name="csrf" value="{{ csrf }}">
       <input type="hidden" name="section" value="quiet">
-      <label style="display:flex;gap:0.5rem;align-items:center;font-weight:400">
-        <input style="width:auto" type="checkbox" name="quiet_enabled" {% if quiet.enabled %}checked{% endif %}>
+      <label class="check-row">
+        <input class="w-auto" type="checkbox" name="quiet_enabled" {% if quiet.enabled %}checked{% endif %}>
         Enabled
       </label>
       <div class="row">
@@ -72,7 +73,7 @@ or rerun <code>deploy.sh</code>. Your data is untouched either way.</p>
         </div>
       </div>
       <p class="hint">"From" can be later than "Until", that means overnight (e.g. 22:00 to 07:00).</p>
-      <p style="margin-bottom:0"><button class="btn-primary" type="submit">Save quiet hours</button></p>
+      <p class="tight"><button class="btn-primary" type="submit">Save quiet hours</button></p>
     </form>
   </section>
 
@@ -113,7 +114,7 @@ or rerun <code>deploy.sh</code>. Your data is untouched either way.</p>
         {% endfor %}
       </select>
       <p class="hint">An all-day event has no time of day, so a reminder made from one needs to be given a time.</p>
-      <p style="margin-bottom:0"><button class="btn-primary" type="submit">Save calendar settings</button></p>
+      <p class="tight"><button class="btn-primary" type="submit">Save calendar settings</button></p>
     </form>
   </section>
 
@@ -138,23 +139,23 @@ or rerun <code>deploy.sh</code>. Your data is untouched either way.</p>
 
   <section class="panel">
     <h2>Your data</h2>
-    <p style="display:flex;gap:0.5rem;flex-wrap:wrap">
+    <p class="chip-row">
       <a class="btn" href="{{ url_for('views.export_json_route') }}">Export JSON</a>
       <a class="btn" href="{{ url_for('views.export_md') }}">Export Markdown</a>
       <a class="btn" href="{{ url_for('views.zip_route') }}">Download everything (zip)</a>
     </p>
-    <h2 style="margin-top:1rem">Import / restore</h2>
+    <h2 class="gap-above">Import / restore</h2>
     <form method="post" action="{{ url_for('views.import_route') }}" enctype="multipart/form-data">
       <input type="hidden" name="csrf" value="{{ csrf }}">
       <label for="s-import">CHKT JSON export or backup file</label>
       <input id="s-import" type="file" name="file" accept="application/json">
-      <label style="display:flex;gap:0.5rem;align-items:center;font-weight:400">
-        <input style="width:auto" type="radio" name="mode" value="merge" checked> Merge into what's here
+      <label class="check-row">
+        <input class="w-auto" type="radio" name="mode" value="merge" checked> Merge into what's here
       </label>
-      <label style="display:flex;gap:0.5rem;align-items:center;font-weight:400">
-        <input style="width:auto" type="radio" name="mode" value="replace"> Replace everything
+      <label class="check-row">
+        <input class="w-auto" type="radio" name="mode" value="replace"> Replace everything
       </label>
-      <p style="margin-bottom:0"><button type="submit" data-confirm title="Import the file, click again to confirm">Import</button></p>
+      <p class="tight"><button type="submit" data-confirm title="Import the file, click again to confirm">Import</button></p>
     </form>
   </section>
 
@@ -166,7 +167,7 @@ or rerun <code>deploy.sh</code>. Your data is untouched either way.</p>
       <caption>Most recent 20 recorded messages</caption>
       <tr><th>When</th><th>Subject</th><th>Why not sent</th></tr>
       {% for m in outbox %}
-      <tr><td>{{ (m.at // 1000) | int | datetimeformat }}</td><td>{{ m.subject }}</td><td>{{ m.reason }}</td></tr>
+      <tr><td>{{ (m.at // 1000) | datetimeformat }}</td><td>{{ m.subject }}</td><td>{{ m.reason }}</td></tr>
       {% endfor %}
     </table>
   </section>

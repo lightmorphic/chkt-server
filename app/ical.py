@@ -104,15 +104,24 @@ def _parse_time(value: str, params: dict, all_day_hour: int):
     """Returns (epoch_millis, was_all_day). All-day events have no time of
     day, so they land on the hour the user chose for them."""
     value = value.strip()
+    # The digit shape can pass while the date is nonsense (month 13, hour
+    # 25); strptime then raises, and an uncaught raise here is a 500 on the
+    # one internet-facing endpoint. Nonsense in, no time out.
     if params.get("VALUE", "").upper() == "DATE" or re.fullmatch(r"\d{8}", value):
-        parsed = datetime.strptime(value[:8], "%Y%m%d")
+        try:
+            parsed = datetime.strptime(value[:8], "%Y%m%d")
+        except ValueError:
+            return None, False
         parsed = parsed.replace(hour=all_day_hour)
         return int(parsed.timestamp() * 1000), True
 
     match = re.fullmatch(r"(\d{8})T(\d{6})(Z?)", value)
     if not match:
         return None, False
-    stamp = datetime.strptime(match.group(1) + match.group(2), "%Y%m%d%H%M%S")
+    try:
+        stamp = datetime.strptime(match.group(1) + match.group(2), "%Y%m%d%H%M%S")
+    except ValueError:
+        return None, False
     if match.group(3) == "Z":
         stamp = stamp.replace(tzinfo=timezone.utc)
     elif "TZID" in params:
@@ -233,7 +242,7 @@ def reminder_to_ics(reminder: dict) -> str:
         f"PRODID:{PRODID}",
         "CALSCALE:GREGORIAN",
         "BEGIN:VEVENT",
-        f"UID:{reminder['id']}",
+        f"UID:{_escape(reminder['id'])}",
         f"DTSTAMP:{_utc_stamp(reminder.get('updated_at') or reminder.get('created_at') or 0)}",
         f"SUMMARY:{_escape(reminder.get('title') or '')}",
     ]

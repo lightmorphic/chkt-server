@@ -2,18 +2,18 @@
 {% block title %}Set up 2FA · CHKT{% endblock %}
 {% block content %}
 <h1>Set up two-factor sign-in</h1>
-<section class="panel" style="max-width:32rem">
+<section class="panel panel-32">
   {% if error %}<p class="msg bad">! {{ error }}</p>{% endif %}
   <p>Add this secret to your authenticator app (Aegis, FreeOTP, etc.):</p>
-  <p><code style="user-select:all;word-break:break-all">{{ secret }}</code></p>
+  <p><code class="copy-all">{{ secret }}</code></p>
   <p class="hint">Or paste this address into an app that accepts otpauth links:<br>
-    <code style="user-select:all;word-break:break-all">{{ uri }}</code></p>
+    <code class="copy-all">{{ uri }}</code></p>
   <form method="post" action="{{ url_for('views.settings_2fa') }}">
     <input type="hidden" name="csrf" value="{{ csrf }}">
     <input type="hidden" name="action" value="confirm">
     <label for="c-code">Enter the current 6-digit code to switch it on</label>
     <input id="c-code" name="code" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" required>
-    <p style="margin-bottom:0"><button class="btn-primary" type="submit">Turn on 2FA</button></p>
+    <p class="tight"><button class="btn-primary" type="submit">Turn on 2FA</button></p>
   </form>
 </section>
 {% endblock %}

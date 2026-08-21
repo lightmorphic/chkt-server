@@ -4,7 +4,7 @@ The self-hosted companion to [CHKT](https://github.com/lightmorphic/chkt),
 the talking reminders app. Run it in Docker on your own server and every
 feature of the phone app is there in the browser too:
 
-- **Everything the app does**: tags, flexible repeats, four alert styles,
+- **Everything the app does**: tags, flexible repeats, three alert styles,
   re-alert until answered with an automatic stop, Do Not Disturb control,
   quiet hours, location reminders, snooze chosen at alert time, and a
   voice "add by speaking" button, installable as an app (PWA) with desktop
@@ -159,7 +159,7 @@ what to do when something misbehaves, written for humans, no jargon.
 ```bash
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
-echo "SECRET_KEY=dev-only-$(date +%s)" > .env   # app reads SECRET_KEY directly
+echo "SECRET_KEY=dev-only-$(date +%s)" >> .env   # app reads SECRET_KEY directly
 .venv/bin/python run.py            # http://127.0.0.1:8321
 .venv/bin/python -m unittest discover -s tests
 ```

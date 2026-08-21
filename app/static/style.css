@@ -16,8 +16,6 @@
 
   --accent: #fbc711;  --accent-hover: #ddaf0f;  --on-accent: #645007;
   --accent-container: #fff8e2;  --on-accent-container: #5f4c06;
-
-  --brand-navy: #111827;
   --link: #1b74bc;
   --danger: #cc372d;   --danger-bg: #fef2f1;
   --success: #38813a;  --success-bg: #f2f9f3;
@@ -138,6 +136,21 @@ textarea { min-height: 6rem; }
   border-radius: 999px; padding: 0.2rem 0.7rem; font-size: 0.8125rem;
 }
 .tag-suggestion-new { background: transparent; border-style: dashed; }
+
+/* Layout utilities. These replaced inline style= attributes, which the CSP
+   (style-src 'self', no unsafe-inline) had been silently discarding — the
+   page rendered without them and nobody had noticed. */
+.tight { margin-bottom: 0; }
+.gap-above { margin-top: 1rem; }
+.gap-above-lg { margin-top: 1.25rem; }
+.gap-around { margin: 0.5rem 0; }
+.w-auto { width: auto; }
+.h-compact { font-size: 1.5rem; }
+.panel-42 { max-width: 42rem; }
+.panel-32 { max-width: 32rem; }
+.check-row { display: flex; gap: 0.5rem; align-items: center; font-weight: 400; }
+.chip-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.copy-all { user-select: all; word-break: break-all; }
 .row { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: end; }
 .row > * { flex: 1; min-width: 8rem; }
 fieldset { border: 0; padding: 0; margin: 0; }
@@ -237,8 +250,6 @@ button:hover, .btn:hover { border-color: var(--muted-fg); }
   gap: 1.25rem;
   align-items: start;
 }
-.list-head { display: flex; align-items: center; gap: 0.5rem; }
-.list-head h2 { flex: 1; margin: 0; }
 
 /* Status + messages */
 .msg { border-radius: var(--radius); padding: 0.6rem 0.9rem; font-size: 0.9375rem; }

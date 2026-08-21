@@ -20,7 +20,6 @@ ALERT_MODES = [
     ("SPEAK_ONLY", "Voice only"),
     ("NOTIFY_ONLY", "Notification only"),
 ]
-SNOOZES = [(10, "10 min"), (30, "30 min"), (60, "1 hr"), (180, "3 hrs"), (720, "12 hrs"), (1440, "1 day")]
 
 
 def _csrf_or_400():
@@ -75,12 +74,15 @@ def history():
 @login_required
 def reminder_edit(reminder_id=None):
     reminder = store.get_reminder(reminder_id) if reminder_id else None
+    form_error = ""
     if request.method == "POST":
         _csrf_or_400()
         saved = _reminder_from_form(request.form, reminder)
         if saved:
             store.upsert_reminder(saved)
             return redirect(url_for("views.home"))
+        # Silently re-rendering looked like a successful save that wasn't.
+        form_error = "Couldn't save — check the title and the date/time format."
     # One screen with every field for both creating and editing, matching the app.
     # Reusing from History: pre-arm it so "pick a date, Save" is the whole
     # gesture — the Active box comes ticked and a past date rolls forward
@@ -94,6 +96,7 @@ def reminder_edit(reminder_id=None):
             due_local = f"{today}T{due_time}"
     return render_template(
         "edit_reminder.html",
+        form_error=form_error,
         reminder=reminder, known_tags=store.all_tags(),
         alert_modes=ALERT_MODES, csrf=csrf_token(), reuse=reuse,
         preset_tag=request.args.get("tag", ""),
@@ -120,6 +123,10 @@ def reminder_toggle(reminder_id):
     r = store.get_reminder(reminder_id)
     if r:
         r["enabled"] = 0 if r["enabled"] else 1
+        # A stale snooze on a revived reminder would fire the moment it's
+        # re-armed — an alarm from a snooze pressed weeks ago.
+        if r["enabled"] and r["snoozed_until"] and r["snoozed_until"] <= db.now_millis():
+            r["snoozed_until"] = None
         r["updated_at"] = db.now_millis()
         store.upsert_reminder(r)
     return redirect(request.referrer or url_for("views.home"))
@@ -450,7 +457,7 @@ def _reminder_from_form(form, existing):
     elif kind == "EVERY":
         n = (form.get("every_n") or "").strip()
         unit = form.get("every_unit") or "d"
-        rule = f"EVERY:{int(n)}{unit}" if n.isdigit() and int(n) > 0 and unit in "mhdwy" else ""
+        rule = f"EVERY:{int(n)}{unit}" if n.isdigit() and int(n) > 0 and unit in ("m", "h", "d", "w", "y") else ""
     else:
         rule = ""
 

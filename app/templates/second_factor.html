@@ -9,14 +9,14 @@
 <body>
 <div class="auth-wrap">
   <div class="panel">
-    <h1 style="font-size:1.5rem">One more step</h1>
+    <h1 class="h-compact">One more step</h1>
     <p class="hint">Enter the 6-digit code from your authenticator app.</p>
     {% if error %}<p class="msg bad">! {{ error }}</p>{% endif %}
     <form method="post">
       <input type="hidden" name="csrf" value="{{ csrf_token() }}">
       <label for="t-code">Code</label>
       <input id="t-code" name="code" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" required autofocus>
-      <p style="margin-bottom:0"><button class="btn-primary" type="submit">Verify</button></p>
+      <p class="tight"><button class="btn-primary" type="submit">Verify</button></p>
     </form>
   </div>
 </div>

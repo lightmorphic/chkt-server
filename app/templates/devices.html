@@ -3,13 +3,13 @@
 {% block content %}
 <h1>Devices</h1>
 
-<section class="panel" style="max-width:42rem">
+<section class="panel panel-42">
   <h2>Connect a device</h2>
   <p class="hint">Each phone or tablet running the CHKT app gets its own access key. In the app: Settings → Sync, paste the server address and this key.</p>
 
   {% if fresh_key %}
   <p class="msg ok">✓ Key created. Copy it now, it's shown only this once:</p>
-  <p><code style="user-select:all;word-break:break-all">{{ fresh_key }}</code></p>
+  <p><code class="copy-all">{{ fresh_key }}</code></p>
   {% endif %}
 
   <form method="post" class="row">
@@ -22,7 +22,7 @@
   </form>
 </section>
 
-<section class="panel" style="max-width:42rem">
+<section class="panel panel-42">
   <h2>Connected devices</h2>
   {% if keys %}
   <table>

@@ -58,7 +58,7 @@ class DevicesStatusTest(unittest.TestCase):
         html = self.client.post("/devices", data={"csrf": csrf, "label": "Second phone"},
                                 follow_redirects=True).get_data(as_text=True)
         # The fresh key is shown exactly once, right after creation.
-        key = re.search(r'user-select:all;word-break:break-all">([^<]+)<', html).group(1)
+        key = re.search(r'class="[^"]*copy-all[^"]*">([^<]+)<', html).group(1)
 
         before = self.client.get("/devices/status").get_json()
         target = [k for k in before["keys"] if k["last_used_at"] is None]

@@ -375,7 +375,7 @@
     }
 
     function poll() {
-      fetch("/devices/status", { headers: { "X-CSRF": csrf } })
+      fetch("/devices/status")
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (data) {
           if (!data) return;

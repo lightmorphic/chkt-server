@@ -3,13 +3,14 @@
 {% block content %}
 <h1>{{ 'Edit reminder' if reminder else 'New reminder' }}</h1>
 
-<form method="post" class="panel" style="max-width:42rem">
+{% if form_error %}<p class="msg bad">! {{ form_error }}</p>{% endif %}
+<form method="post" class="panel panel-42">
   <input type="hidden" name="csrf" value="{{ csrf }}">
 
   <label for="f-title">What to remind you about</label>
   <input id="f-title" name="title" required value="{{ reminder.title if reminder else '' }}">
   {% if not reminder %}
-  <p style="margin:0.5rem 0">
+  <p class="gap-around">
     <button type="button" class="btn" id="voice-add">Add by voice</button>
   </p>
   <p class="hint" id="voice-status" hidden></p>
@@ -98,12 +99,12 @@
     <option value="{{ value }}" {% if reminder and reminder.alert_mode == value %}selected{% endif %}>{{ label }}</option>
     {% endfor %}
   </select>
-  <label style="display:flex;gap:0.5rem;align-items:center;font-weight:400">
-    <input style="width:auto" type="checkbox" name="vibrate" {% if not reminder or reminder.vibrate %}checked{% endif %}>
+  <label class="check-row">
+    <input class="w-auto" type="checkbox" name="vibrate" {% if not reminder or reminder.vibrate %}checked{% endif %}>
     Vibrate (on your phone)
   </label>
-  <label style="display:flex;gap:0.5rem;align-items:center;font-weight:400">
-    <input style="width:auto" type="checkbox" name="respect_dnd" {% if reminder and reminder.respect_dnd %}checked{% endif %}>
+  <label class="check-row">
+    <input class="w-auto" type="checkbox" name="respect_dnd" {% if reminder and reminder.respect_dnd %}checked{% endif %}>
     Stay quiet during Do Not Disturb
   </label>
 
@@ -125,12 +126,12 @@
       <option value="120" {% if stop == 120 %}selected{% endif %}>2 hours</option>
     </select>
   </div>
-  <label style="display:flex;gap:0.5rem;align-items:center;font-weight:400">
-    <input style="width:auto" type="checkbox" name="delete_after_dismissed" {% if reminder and reminder.delete_after_dismissed %}checked{% endif %}>
+  <label class="check-row">
+    <input class="w-auto" type="checkbox" name="delete_after_dismissed" {% if reminder and reminder.delete_after_dismissed %}checked{% endif %}>
     Delete the reminder once dismissed
   </label>
-  <label style="display:flex;gap:0.5rem;align-items:center;font-weight:400">
-    <input style="width:auto" type="checkbox" name="active" {% if reuse or not reminder or reminder.enabled %}checked{% endif %}>
+  <label class="check-row">
+    <input class="w-auto" type="checkbox" name="active" {% if reuse or not reminder or reminder.enabled %}checked{% endif %}>
     Active
   </label>
 
@@ -159,7 +160,7 @@
     <p class="hint">Location alerts fire on the phone, which is the thing that travels, set the place here and the app picks it up on the next sync. <button class="btn-quiet" type="button" data-use-location>Use my location now</button></p>
   </div>
 
-  <p style="margin-bottom:0;margin-top:1.25rem">
+  <p class="tight gap-above-lg">
     <button class="btn-primary" type="submit">Save reminder</button>
     <a class="btn" href="{{ url_for('views.home') }}">Cancel</a>
   </p>

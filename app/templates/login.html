@@ -9,7 +9,7 @@
 <body>
 <div class="auth-wrap">
   <div class="panel">
-    <h1 style="font-size:1.5rem">Sign in to CHKT</h1>
+    <h1 class="h-compact">Sign in to CHKT</h1>
     {% if error %}<p class="msg bad">! {{ error }}</p>{% endif %}
     <form method="post">
       <input type="hidden" name="csrf" value="{{ csrf_token() }}">
@@ -17,7 +17,7 @@
       <input id="l-user" name="username" autocomplete="username" required>
       <label for="l-pass">Password</label>
       <input id="l-pass" name="password" type="password" autocomplete="current-password" required>
-      <p style="margin-bottom:0"><button class="btn-primary" type="submit">Sign in</button></p>
+      <p class="tight"><button class="btn-primary" type="submit">Sign in</button></p>
     </form>
   </div>
 </div>

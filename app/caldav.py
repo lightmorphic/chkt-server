@@ -12,6 +12,10 @@ that key on every request, so this belongs behind HTTPS exactly like the
 rest of the server.
 """
 import base64
+# Plain ElementTree, deliberately: modern expat refuses external entities and
+# caps entity amplification, which covers XXE and billion-laughs (verified
+# against this runtime). If the deployment target ever pins an ancient expat,
+# swap in defusedxml here.
 from xml.etree import ElementTree as ET
 from xml.sax.saxutils import escape as xml_escape
 

@@ -1,7 +1,7 @@
 import os
 from datetime import timedelta
 
-from flask import Flask
+from flask import Flask, request
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from . import api, auth, backup, caldav, db, pushsvc, views
@@ -59,6 +59,10 @@ def create_app():
         resp.headers.setdefault("X-Content-Type-Options", "nosniff")
         resp.headers.setdefault("X-Frame-Options", "DENY")
         resp.headers.setdefault("Referrer-Policy", "same-origin")
+        # Only meaningful when the request actually came over TLS (Funnel,
+        # Caddy); harmless and ignored by browsers otherwise.
+        if request.is_secure:
+            resp.headers.setdefault("Strict-Transport-Security", "max-age=63072000")
         resp.headers.setdefault(
             "Content-Security-Policy",
             "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; "

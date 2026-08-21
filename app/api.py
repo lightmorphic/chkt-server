@@ -30,6 +30,13 @@ def sync():
     body = request.get_json(silent=True) or {}
     since = int(body.get("since") or 0)
 
+    # The "now" the client will use as its next `since` is minted BEFORE the
+    # snapshot: a row committed while this request runs then lands after the
+    # returned watermark and shows up next sync. Minting it after the
+    # snapshot left a crack — committed post-snapshot, stamped pre-"now",
+    # visible to neither this pull nor any later one.
+    now = db.now_millis()
+
     # What the server will send back: everything that changed after `since`,
     # captured BEFORE applying the client's batch so the client's own records
     # don't echo straight back.
@@ -79,7 +86,7 @@ def sync():
             continue
 
     return jsonify({
-        "now": db.now_millis(),
+        "now": now,
         "reminders": [_reminder_to_json(r) for r in outgoing["reminders"]],
         "logs": [
             {"id": r["id"], "reminderId": r["reminder_id"], "dueAt": r["due_at"],

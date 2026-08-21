@@ -1,5 +1,50 @@
 # Changelog
 
+## [1.1.25]
+
+Security-and-quality audit release: two independent reviews (security and
+code quality) of the whole codebase, every finding verified and fixed or
+consciously accepted. Highlights below; SECURITY.md gained a section on
+the login-throttle trade-off behind a proxy.
+
+### Fixed
+- A calendar event with a nonsense date (month 13, hour 25) crashed the
+  request with a 500 on the CalDAV endpoint — the one surface exposed to
+  the internet. Bad dates now read as "no usable time" and the event is
+  refused cleanly (403), with a regression test.
+- Every page was rendering without its inline layout styles: the strict
+  Content-Security-Policy (deliberately no unsafe-inline) had been
+  silently discarding all ~40 style attributes in the templates. They are
+  proper CSS classes now, so checkbox rows, panel widths and headings
+  render as designed — and the CSP stays strict.
+- A sync pull could permanently miss a change committed while the sync
+  request was in flight: the "now" watermark the client advances to was
+  minted after the change snapshot, leaving a crack between them. The
+  watermark is minted first now; overlap is safe, a gap was not.
+- Signing in with a wrong username answered measurably faster than a
+  wrong password, quietly confirming the one valid username to anyone
+  timing the difference. Both cases now cost the same scrypt check.
+- The update banner's instructions referenced a deleted deploy script and
+  a build-from-source flow; it now gives the pull-based update command.
+- An invalid reminder form (unparseable date) silently re-rendered as if
+  saved; it now says what went wrong.
+- Re-enabling a reminder with a stale snooze no longer fires the moment
+  it's switched on, off a snooze pressed weeks ago.
+- A crafted repeat unit like "hd" passed a substring check and stored an
+  unparseable rule that never fired; the unit is now matched exactly.
+
+### Changed
+- First-run /setup on the HTTPS posture (CHKT_INSECURE_COOKIES unset)
+  now requires CHKT_SETUP_TOKEN, so a stranger can't claim a fresh
+  internet-facing install before its owner. Private-network installs
+  (CHKT_INSECURE_COOKIES=1) are unchanged.
+- HSTS header on HTTPS responses.
+- Housekeeping from the audit: dead constants, an unused CSS variable and
+  rule, a pointless CSRF header on a GET, and a stray tzinfo in the
+  repeat engine are gone; the iCalendar UID is escaped like every other
+  text field; new tests cover /state, version comparison, and the
+  malformed-date refusal (91 tests total).
+
 ## [1.1.24]
 
 ### Added

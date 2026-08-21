@@ -29,3 +29,14 @@ hold off on public disclosure until a fix ships.
   claim a fresh install's account.
 - The container drops all Linux capabilities and forbids privilege
   escalation (see docker-compose.yml).
+
+## Login throttling behind a proxy
+
+Failed sign-ins are throttled by connecting address. The proxy headers that
+name the real client are deliberately not trusted (they are trivially
+spoofed), so behind the Caddy overlay or Tailscale serve every visitor
+shares the proxy's address — including you. Five wrong guesses from anyone
+lock the login for fifteen minutes for everyone. On a personal server
+behind HTTPS this is the safe trade: an attacker cannot dodge the throttle
+by rotating forged headers, and the sync API and CalDAV (key-based, not
+password-based) stay unaffected while it holds.
