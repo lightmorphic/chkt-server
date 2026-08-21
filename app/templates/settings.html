@@ -121,11 +121,11 @@ Your data is untouched either way.</p>
   <section class="panel">
     <h2>Follow a calendar</h2>
     <p class="hint">Point CHKT at a calendar on your calendar service (Fastmail, iCloud,
-      Nextcloud — anything CalDAV) and events you create THERE become reminders HERE
-      within a minute: notification and voice, repeating every 5 minutes for an hour.
-      This is the fast direction — your service updates its own calendar instantly,
-      and CHKT checks it every 60 seconds, instead of waiting for the service to
-      push outwards on its own schedule.</p>
+      Nextcloud — anything CalDAV) and it becomes CHKT's calendar, both ways, fast.
+      Events you create there are reminders here within a minute — notification and
+      voice, repeating every 5 minutes for an hour. Reminders you create here appear
+      there seconds later. Nobody waits for the service's own sync engine: CHKT
+      writes directly and checks back every 60 seconds.</p>
     <form method="post">
       <input type="hidden" name="csrf" value="{{ csrf }}">
       <input type="hidden" name="section" value="follow">
@@ -151,10 +151,10 @@ Your data is untouched either way.</p>
       <p class="hint">Status: {{ follow.status }}</p>
       <p class="hint">Fastmail: Settings → Privacy &amp; Security → New app password
         (Calendars), and the calendar's CalDAV URL is under Settings → Calendars →
-        that calendar → CalDAV. Use a calendar you create events in — CHKT's own
-        subscribed calendar stays separate, so nothing shows up twice. Deleting the
-        event there removes the reminder here; answering the reminder here doesn't
-        touch the event there.</p>
+        that calendar → CalDAV. With a followed calendar there's no need to also
+        subscribe that service to CHKT's own calendar — remove such an account if
+        you have one, or every reminder shows twice. Deletions travel both ways;
+        answering or snoozing a reminder here doesn't touch the event there.</p>
       <p class="tight"><button class="btn-primary" type="submit">Save and check now</button></p>
     </form>
   </section>

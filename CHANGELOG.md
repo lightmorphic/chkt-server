@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.1.28]
+
+### Changed
+- **The followed calendar is two-way now.** Reminders CHKT publishes
+  (every timed one, or just those wearing your calendar tag) are written
+  onto the followed calendar as events, seconds after they're created or
+  edited — so a reminder entered on the phone shows in Fastmail almost
+  immediately, and an event entered in Fastmail is on the phone within a
+  minute. Deleting the event on the calendar deletes the reminder;
+  deleting or untagging the reminder withdraws the event; a reminder
+  edited here since its last push wins over a remote deletion. With this,
+  subscribing the calendar service to CHKT's own calendar is redundant —
+  remove that account or everything shows twice. CHKT's own CalDAV server
+  is unchanged for clients that want it directly (DAVx⁵, Thunderbird).
+
 ## [1.1.27]
 
 ### Added

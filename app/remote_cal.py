@@ -9,8 +9,16 @@ CHKT's schedule — within a minute.
 
 Followed events become reminders with the can't-miss defaults (notify and
 speak, re-alert every 5 minutes for an hour), and the remote stays the
-source of truth: edits and deletions there follow here. Local answers
-(done, snooze) stick, because they don't change the remote copy's ETag.
+source of truth for events born there: edits and deletions follow here.
+Local answers (done, snooze) stick, because they don't change the remote
+copy's ETag.
+
+And it works the other way too: CHKT's own reminders (the ones its
+calendar publishes — every timed one, or just those wearing the calendar
+tag) are PUSHED onto the same followed calendar as events named
+chkt-<id>.ics. Enter a reminder on the phone and it's on the calendar
+seconds later; edit or delete the event there and the reminder follows.
+One calendar, both directions, no third party's sync engine in the way.
 """
 import base64
 import json
@@ -62,11 +70,11 @@ def config():
     }
 
 
-def _request(url, method, body, username, password, depth=None):
+def _request(url, method, body, username, password, depth=None, content_type="application/xml; charset=utf-8"):
     req = urllib.request.Request(url, data=body.encode() if body else None, method=method)
     token = base64.b64encode(f"{username}:{password}".encode()).decode()
     req.add_header("Authorization", "Basic " + token)
-    req.add_header("Content-Type", "application/xml; charset=utf-8")
+    req.add_header("Content-Type", content_type)
     if depth is not None:
         req.add_header("Depth", str(depth))
     with urllib.request.urlopen(req, timeout=20) as resp:
@@ -147,6 +155,10 @@ def sync_once() -> str:
     added = changed = removed = 0
     all_day_hour = _all_day_hour()
     for href, etag in remote.items():
+        # Events CHKT itself pushed are handled by the push phase below —
+        # importing them back as "foreign" would duplicate every reminder.
+        if href.rsplit("/", 1)[-1].startswith("chkt-"):
+            continue
         known = state.get(href)
         if known and known.get("etag") == etag:
             continue
@@ -161,15 +173,77 @@ def sync_once() -> str:
             added += 0 if known else 1
 
     for href in list(state.keys()):
+        # The push phase keeps its own bookkeeping under "mine"; only real
+        # event hrefs belong in this vanished-from-the-calendar sweep.
+        if not href.endswith(".ics"):
+            continue
         if href not in remote:
             rid = (state.pop(href) or {}).get("rid")
             if rid and store.get_reminder(rid):
                 store.soft_delete("reminders", rid)
                 removed += 1
 
+    pushed, unpushed = _push_mine(cfg, remote, state)
+
     setting_put(_STATE_KEY, json.dumps(state))
     when = time.strftime("%H:%M")
-    return f"Checked {when}: {added} new, {changed} updated, {removed} removed."
+    return (f"Checked {when}: {added} new, {changed} updated, {removed} removed; "
+            f"{pushed} sent, {unpushed} withdrawn.")
+
+
+def _push_mine(cfg, remote, state):
+    """The other direction: CHKT's own published reminders live on the
+    followed calendar too, as chkt-<id>.ics. Enter a reminder on the phone
+    and it's on the calendar seconds after the next pass; delete or untag
+    it here and the event goes; delete the event THERE and the reminder
+    follows — unless it was edited here since the last push, in which case
+    the edit wins and the event comes back."""
+    from urllib.parse import urljoin
+    from . import caldav
+
+    mine = state.get("mine") or {}
+    publishable = {r["id"]: r for r in caldav._events()}
+    remote_names = {h.rsplit("/", 1)[-1] for h in remote}
+    pushed = unpushed = 0
+
+    for rid, reminder in publishable.items():
+        record = mine.get(rid)
+        href = f"chkt-{rid}.ics"
+        if record and record.get("updated_at") == reminder["updated_at"]:
+            if href in remote_names or not record.get("seen_remote"):
+                # Unchanged and still there (or not yet confirmed there —
+                # PUT responses don't always list back immediately).
+                mine[rid]["seen_remote"] = href in remote_names or record.get("seen_remote")
+                continue
+            # We pushed it, the calendar had it, now it's gone: someone
+            # deleted the event there. Mirror that here.
+            store.soft_delete("reminders", rid)
+            del mine[rid]
+            unpushed += 1
+            continue
+        try:
+            _request(urljoin(cfg["url"], href), "PUT",
+                     ical.reminder_to_ics(reminder), cfg["username"], cfg["password"],
+                     content_type="text/calendar; charset=utf-8")
+        except Exception:
+            continue  # Retried next pass; one failure mustn't block the rest.
+        mine[rid] = {"updated_at": reminder["updated_at"], "seen_remote": False}
+        pushed += 1
+
+    # No longer publishable — deleted or untagged here — so withdraw the event.
+    for rid in list(mine.keys()):
+        if rid in publishable:
+            continue
+        try:
+            _request(urljoin(cfg["url"], f"chkt-{rid}.ics"), "DELETE", None,
+                     cfg["username"], cfg["password"])
+        except Exception:
+            pass  # Already gone, or unreachable; either way safe to retry.
+        del mine[rid]
+        unpushed += 1
+
+    state["mine"] = mine
+    return pushed, unpushed
 
 
 def _all_day_hour() -> int:

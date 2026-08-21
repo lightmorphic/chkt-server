@@ -99,6 +99,41 @@ class RemoteCalTest(unittest.TestCase):
         published = {r["id"] for r in caldav._events()}
         self.assertFalse(any(rid.startswith(remote_cal.ID_PREFIX) for rid in published))
 
+    def test_07b_own_reminders_are_pushed_to_the_followed_calendar(self):
+        now = db.now_millis()
+        store.upsert_reminder({
+            "id": "local1", "tags": "cal", "title": "Born on the phone", "notes": "",
+            "due_at": now + 3_600_000, "duration_minutes": 0, "repeat_rule": "",
+            "alert_mode": "NOTIFY_AND_SPEAK", "pre_tone": 0, "enabled": 1, "vibrate": 1,
+            "respect_dnd": 0, "nag_interval_minutes": 0, "nag_stop_after_minutes": 60,
+            "nag_started_at": None, "delete_after_dismissed": 0, "snoozed_until": None,
+            "location_trigger": "NONE", "latitude": None, "longitude": None,
+            "radius_metres": 150.0, "created_at": now, "updated_at": now, "deleted_at": None})
+        calls = []
+        def fake_request(url, method, body, u, p, depth=None, content_type=None):
+            calls.append((method, url))
+            return b""
+        with mock.patch.object(remote_cal, "fetch_etags", return_value={}),              mock.patch.object(remote_cal, "_request", side_effect=fake_request):
+            status = remote_cal.sync_once()
+        puts = [u for m, u in calls if m == "PUT"]
+        self.assertTrue(any(u.endswith("chkt-local1.ics") for u in puts), puts)
+        self.assertIn("sent", status)
+
+    def test_07c_our_own_remote_copies_are_not_reimported(self):
+        # The push phase's events must not come back as "foreign" imports.
+        self._sync_with({"/cal/chkt-local1.ics": '"9"'}, {})
+        self.assertIsNone(store.get_reminder(remote_cal._reminder_id("/cal/chkt-local1.ics")))
+
+    def test_07d_deleting_our_event_on_the_calendar_deletes_the_reminder(self):
+        # Round 1: push and see it on the remote. Round 2: it vanishes there.
+        with mock.patch.object(remote_cal, "fetch_etags",
+                               return_value={"/cal/chkt-local1.ics": '"1"'}),              mock.patch.object(remote_cal, "_request", return_value=b""):
+            remote_cal.sync_once()
+        with mock.patch.object(remote_cal, "fetch_etags", return_value={}),              mock.patch.object(remote_cal, "_request", return_value=b""):
+            remote_cal.sync_once()
+        gone = store.get_reminder("local1")
+        self.assertIsNotNone(gone["deleted_at"])
+
     def test_08_propfind_parsing(self):
         xml = ('<?xml version="1.0"?><D:multistatus xmlns:D="DAV:">'
                '<D:response><D:href>/cal/</D:href><D:propstat><D:prop>'
