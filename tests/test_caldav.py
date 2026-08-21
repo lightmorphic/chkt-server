@@ -14,6 +14,7 @@ os.environ["CHKT_INSECURE_COOKIES"] = "1"
 from app import create_app  # noqa: E402  (env must be set first)
 from app import caldav, db, ical, store  # noqa: E402
 from app.auth import new_access_key  # noqa: E402
+from app.settings_store import put as setting_put  # noqa: E402
 
 CAL = caldav.CALENDAR_PATH
 
@@ -217,6 +218,81 @@ class CalDavTest(unittest.TestCase):
         # The deleted one comes back as a 404 response, telling the client to drop it.
         self.assertIn("fromcal.ics", body)
         self.assertIn("404 Not Found", body)
+
+
+class CalendarTagTest(unittest.TestCase):
+    """With a tag set in Settings, the calendar narrows to reminders wearing
+    it — so a wall of daily repeats stays out of the calendar while the
+    weekly rehearsal doesn't."""
+
+    @classmethod
+    def setUpClass(cls):
+        os.environ["CHKT_DB"] = os.path.join(_tmp, "test.db")
+        cls.app = create_app()
+        cls.client = cls.app.test_client()
+        cls.key = new_access_key("tag-test")
+        cls.auth = {"Authorization": "Basic " + base64.b64encode(
+            f"chkt:{cls.key}".encode()).decode()}
+        store.upsert_reminder(_reminder("tagged", "Acting group", 1_900_000_300_000,
+                                        tags="hobby, Cal", repeat_rule="WEEKLY:TUE"))
+        store.upsert_reminder(_reminder("untagged", "Take pills", 1_900_000_400_000,
+                                        repeat_rule="DAILY"))
+        setting_put("calendar_tag", "cal")
+
+    @classmethod
+    def tearDownClass(cls):
+        setting_put("calendar_tag", "")
+
+    def _dav(self, path, method, body="", **headers):
+        head = dict(self.auth)
+        head.update(headers)
+        return self.client.open(path, method=method, data=body, headers=head)
+
+    def test_01_only_tagged_reminders_are_published(self):
+        body = self._dav(CAL, "PROPFIND", "", Depth="1").get_data(as_text=True)
+        self.assertIn("tagged.ics", body)
+        self.assertNotIn("untagged.ics", body)
+
+    def test_02_the_tag_is_case_insensitive(self):
+        # Set on the reminder as "Cal", typed in Settings as "cal".
+        self.assertEqual(200, self._dav(CAL + "tagged.ics", "GET").status_code)
+
+    def test_03_an_untagged_reminder_is_not_reachable(self):
+        self.assertEqual(404, self._dav(CAL + "untagged.ics", "GET").status_code)
+
+    def test_04_new_events_get_the_tag_so_they_stay_visible(self):
+        ics = EVENT_ICS.format(uid="newtag", summary="Added in Fastmail",
+                               start="20261001T190000", extra="")
+        self.assertEqual(201, self._dav(CAL + "newtag.ics", "PUT", ics).status_code)
+        self.assertIn("cal", [t.casefold() for t in
+                              store.tag_list(store.get_reminder("newtag"))])
+        self.assertIn("newtag.ics", self._dav(CAL, "PROPFIND", "", Depth="1").get_data(as_text=True))
+
+    def test_05_untagging_removes_it_from_a_subscribed_client(self):
+        report = ('<?xml version="1.0"?><D:sync-collection xmlns:D="DAV:">'
+                  "<D:sync-token/><D:prop><D:getetag/></D:prop></D:sync-collection>")
+        body = self._dav(CAL, "REPORT", report).get_data(as_text=True)
+        # A reminder without the tag is reported gone, the same as a deleted
+        # one, so the calendar app drops its copy.
+        self.assertIn("untagged.ics", body)
+        self.assertIn("404 Not Found", body)
+
+
+class ForwardedSchemeTest(unittest.TestCase):
+    """Behind a TLS proxy the app is spoken to over plain HTTP. A redirect
+    that forgets that sends CalDAV clients from https to http, where nothing
+    is listening."""
+
+    @classmethod
+    def setUpClass(cls):
+        os.environ["CHKT_DB"] = os.path.join(_tmp, "test.db")
+        cls.client = create_app().test_client()
+
+    def test_redirect_keeps_the_scheme_the_client_used(self):
+        r = self.client.open("/dav", method="PROPFIND",
+                             headers={"X-Forwarded-Proto": "https", "Host": "example.ts.net"})
+        self.assertEqual(308, r.status_code)
+        self.assertTrue(r.headers["Location"].startswith("https://"), r.headers["Location"])
 
 
 class IcalMappingTest(unittest.TestCase):

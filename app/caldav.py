@@ -98,10 +98,28 @@ def _all_day_hour() -> int:
     return int(raw) if raw.isdigit() and 0 <= int(raw) <= 23 else 9
 
 
+def _calendar_tag() -> str:
+    """The tag a reminder needs before it appears on the calendar. Empty —
+    the default — publishes everything, which is what an install that has
+    never thought about this should do."""
+    return setting_get("calendar_tag", "").strip()
+
+
+def _on_calendar(reminder, tag: str) -> bool:
+    """A location-only reminder has no moment to draw, and with a tag set,
+    only reminders wearing it belong on the calendar. Case-insensitive: the
+    tag typed in Settings and the one typed on a reminder rarely match on
+    capitals."""
+    if not reminder.get("due_at"):
+        return False
+    if not tag:
+        return True
+    return tag.casefold() in [t.casefold() for t in store.tag_list(reminder)]
+
+
 def _events():
-    """Reminders that can sit on a calendar: everything with a time. A
-    location-only reminder has no moment to draw."""
-    return [r for r in store.reminders() if r.get("due_at")]
+    tag = _calendar_tag()
+    return [r for r in store.reminders() if _on_calendar(r, tag)]
 
 
 def _etag(reminder) -> str:
@@ -341,9 +359,12 @@ def _sync_report(root, requested, wants_data):
     since = _token_value(token_el.text if token_el is not None else "")
     changed = store.changed_since(since)["reminders"]
 
+    tag = _calendar_tag()
     responses = []
     for reminder in changed:
-        gone = reminder.get("deleted_at") or not reminder.get("due_at")
+        # Untagging a reminder takes it off the calendar, so it has to leave
+        # a client's copy the same way a deleted one does.
+        gone = reminder.get("deleted_at") or not _on_calendar(reminder, tag)
         if gone:
             responses.append(f"<D:response><D:href>{xml_escape(_href(reminder))}</D:href>"
                              "<D:status>HTTP/1.1 404 Not Found</D:status></D:response>")
@@ -364,7 +385,11 @@ def event(rid):
         return _unauthorized()
 
     reminder = store.get_reminder(rid)
-    live = reminder and not reminder.get("deleted_at") and reminder.get("due_at")
+    # "On the calendar" has to mean the same thing at a resource's own URL as
+    # it does in the listing, or a client holding an old href keeps seeing
+    # something the calendar says is gone. PUT judges for itself: writing to
+    # an untagged reminder is an edit, not a new one.
+    live = reminder and not reminder.get("deleted_at") and _on_calendar(reminder, _calendar_tag())
 
     if request.method == "PUT":
         return _put(rid, reminder)
@@ -423,6 +448,11 @@ def _put(rid, existing):
         if key in fields:
             record[key] = fields[key]
     record["alert_mode"] = store.normalize_alert_mode(record.get("alert_mode"))
+    # An event created in a calendar app has to keep showing there. With a
+    # tag filter set it wouldn't, unless it wears the tag.
+    tag = _calendar_tag()
+    if tag and tag.casefold() not in [t.casefold() for t in store.tag_list(record)]:
+        record["tags"] = ", ".join(filter(None, [record.get("tags", ""), tag]))
     record["deleted_at"] = None
     record["updated_at"] = now
     store.upsert_reminder(record)

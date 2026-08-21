@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.1.18]
+
+### Added
+- **Only publish reminders with a chosen tag.** Settings → Calendar takes a
+  tag (say `cal`); fill it in and only reminders wearing it reach the
+  calendar. A wall of daily repeats stays out of the way while a weekly
+  rehearsal doesn't — and it's a tag, so you can set it from the phone
+  today without waiting for an app update. Leave it empty and every timed
+  reminder is published, as before. Capitals don't matter, an event you
+  add from a calendar app gets the tag automatically so it stays visible,
+  and taking the tag off a reminder removes it from subscribed calendars
+  the same way deleting it would.
+
+### Fixed
+- Redirects sent CalDAV clients from `https://` to `http://`. Behind
+  Tailscale serve, Funnel, Caddy or any other TLS terminator the app is
+  spoken to over plain HTTP, so it built its redirects with the wrong
+  scheme and a client following one landed where nothing was listening.
+  The forwarded scheme is now honoured (the forwarded host deliberately
+  isn't, so a spoofed header can't rewrite CHKT's own URLs).
+
 ## [1.1.17]
 
 ### Fixed

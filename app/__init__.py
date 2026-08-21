@@ -2,6 +2,7 @@ import os
 from datetime import timedelta
 
 from flask import Flask
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from . import api, auth, backup, caldav, db, pushsvc, views
 
@@ -27,6 +28,13 @@ def create_app():
     @app.template_filter("datetimeformat")
     def datetimeformat(epoch_seconds):
         return datetime.fromtimestamp(int(epoch_seconds)).strftime("%d %b %Y, %H:%M")
+
+    # Tailscale serve/funnel, Caddy and every other TLS terminator forward
+    # plain HTTP inwards, so Flask built its redirects with http:// — a
+    # CalDAV client following one leaves HTTPS and lands nowhere. Trust the
+    # forwarded scheme only; the host stays whatever was actually asked for,
+    # so a spoofed X-Forwarded-Host can't rewrite our URLs.
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1)
 
     db.init_db()
     pushsvc.ensure_vapid_keys()

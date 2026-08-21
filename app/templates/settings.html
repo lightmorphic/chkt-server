@@ -90,6 +90,15 @@ or rerun <code>deploy.sh</code>. Your data is untouched either way.</p>
     <form method="post">
       <input type="hidden" name="csrf" value="{{ csrf }}">
       <input type="hidden" name="section" value="calendar">
+      <label for="s-caltag">Only publish reminders tagged</label>
+      <input id="s-caltag" type="text" name="calendar_tag" value="{{ calendar_tag }}"
+             placeholder="cal" autocapitalize="off" spellcheck="false">
+      <p class="hint">Leave empty to publish every timed reminder. Fill it in and only
+        reminders wearing that tag reach the calendar — so a daily "take pills" stays out
+        of the way while your Tuesday rehearsal doesn't. Tag reminders in the app or here;
+        capitals don't matter. Anything you add from a calendar app gets the tag
+        automatically, so it stays visible.</p>
+
       <label for="s-allday">All-day events alert at</label>
       <select id="s-allday" name="calendar_all_day_hour">
         {% for h in range(24) %}

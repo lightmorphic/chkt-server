@@ -183,6 +183,7 @@ def settings_page():
         elif section == "calendar":
             hour = (request.form.get("calendar_all_day_hour") or "9").strip()
             setting_put("calendar_all_day_hour", hour if hour.isdigit() and 0 <= int(hour) <= 23 else "9")
+            setting_put("calendar_tag", (request.form.get("calendar_tag") or "").strip())
             message = "Calendar settings saved."
     from .update_check import VERSION, available_update
     from .settings_store import quiet_hours
@@ -193,6 +194,7 @@ def settings_page():
         "settings.html", values=values, message=message,
         caldav_url=request.url_root.rstrip("/") + caldav_path,
         calendar_all_day_hour=setting("calendar_all_day_hour", "9") or "9",
+        calendar_tag=setting("calendar_tag", ""),
         server_version=VERSION, update_available=available_update(),
         smtp_password_set=bool(setting("smtp_password")),
         totp_enabled=bool(setting("totp_secret")),
