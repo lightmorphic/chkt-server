@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.1.23]
+
+### Fixed
+- The version badge sat in the bottom-right corner, exactly underneath
+  the add button, which covered it. Moved to the bottom left.
+- Newly released versions weren't offered by the in-app update check:
+  the banner reads GitHub releases, and 1.1.15 through 1.1.22 shipped as
+  tags and images without one. Those releases are backfilled, and from
+  now on the publish workflow creates the release itself, so a version
+  can't ship invisible to the checker again.
+
 ## [1.1.22]
 
 ### Fixed
