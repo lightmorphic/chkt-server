@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.26]
+
+### Changed
+- The version badge now links to chkt.org, the project's own site, rather
+  than the GitHub repository.
+- chkt.org itself grew up: an interactive demo of an alert — the
+  notification, a synthesized ding, the full-screen alert and the reminder
+  spoken by the browser's own voice, entirely self-contained so the page
+  still makes no external requests — plus the copy brought in line with
+  the app that ships (three alert styles, sound-then-voice, tags, and the
+  CalDAV calendar).
+
 ## [1.1.25]
 
 Security-and-quality audit release: two independent reviews (security and

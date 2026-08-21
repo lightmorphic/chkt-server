@@ -31,7 +31,7 @@ def create_app():
         # base.html) without each view having to pass it along.
         from .update_check import VERSION
         return {"server_version": VERSION,
-                "project_url": "https://github.com/lightmorphic/chkt-server"}
+                "project_url": "https://chkt.org"}
 
     @app.template_filter("datetimeformat")
     def datetimeformat(epoch_seconds):

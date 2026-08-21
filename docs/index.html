@@ -155,6 +155,65 @@ footer nav { display: flex; gap: 1.5rem; flex-wrap: wrap; }
 footer nav a { text-decoration: none; font-weight: 600; font-size: 0.9375rem; }
 footer .fine { color: var(--muted-fg); font-size: 0.8125rem; margin-top: 1rem; }
 
+/* ---- Interactive demo phone ---- */
+.hero-split { display: flex; gap: 2.5rem; align-items: flex-start; flex-wrap: wrap; }
+.hero-copy { flex: 1 1 26rem; min-width: 0; }
+.demo-wrap { flex: 0 0 auto; margin: 0 auto; text-align: center; }
+.phone {
+  width: 292px; height: 596px; margin: 0 auto;
+  border-radius: 2.4rem; border: 10px solid #111827;
+  background: var(--bg); overflow: hidden; position: relative;
+  box-shadow: var(--shadow-panel);
+}
+.phone .screen { position: absolute; inset: 0; display: flex; flex-direction: column; transition: opacity 0.25s; }
+.phone .screen[hidden] { display: none; }
+.p-top { display: flex; align-items: center; gap: 0.5rem; padding: 0.9rem 1rem 0.5rem; font-weight: 700; }
+.p-top svg { border-radius: 5px; }
+.p-top .ver { margin-left: auto; font-size: 0.7rem; font-weight: 400; color: var(--muted-fg); }
+.p-chips { display: flex; gap: 0.4rem; padding: 0.25rem 1rem 0.5rem; flex-wrap: wrap; }
+.p-chip { font-size: 0.7rem; font-weight: 600; border: 1px solid var(--border); border-radius: 999px; padding: 0.1rem 0.6rem; color: var(--muted-fg); }
+.p-chip.on { background: var(--accent-container); color: var(--on-accent-container); border-color: transparent; }
+.p-list { padding: 0.25rem 0.9rem; display: flex; flex-direction: column; gap: 0.5rem; overflow: hidden; }
+.p-card { text-align: left; border: 1px solid var(--panel-border); border-radius: 1rem; padding: 0.6rem 0.8rem; background: var(--panel); }
+.p-card .t { font-weight: 600; font-size: 0.85rem; }
+.p-card .w { font-size: 0.72rem; color: var(--muted-fg); }
+.p-card .g { font-size: 0.68rem; color: var(--on-accent-container); }
+.p-fab {
+  position: absolute; right: 1rem; bottom: 1rem; width: 3rem; height: 3rem;
+  border-radius: 1rem; background: var(--accent); color: var(--on-accent);
+  display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 700;
+}
+.p-notif {
+  position: absolute; top: 0.6rem; left: 0.6rem; right: 0.6rem;
+  background: var(--panel); border: 1px solid var(--panel-border); border-radius: 1rem;
+  box-shadow: var(--shadow-panel); padding: 0.6rem 0.8rem; text-align: left;
+  transform: translateY(-130%); transition: transform 0.3s ease;
+}
+.p-notif.in { transform: translateY(0); }
+.p-notif .h { display: flex; gap: 0.4rem; align-items: center; font-size: 0.68rem; color: var(--muted-fg); }
+.p-notif .t { font-weight: 600; font-size: 0.82rem; margin-top: 0.15rem; }
+.p-alert { background: #FBC711; color: #111827; align-items: center; justify-content: center; text-align: center; padding: 1.5rem; }
+.p-alert .big { font-size: 1.35rem; font-weight: 700; line-height: 1.25; }
+.p-alert .done {
+  margin-top: 1.75rem; width: 100%; padding: 0.9rem; border: none; border-radius: 1rem;
+  background: #111827; color: #FBC711; font: inherit; font-size: 1.05rem; font-weight: 700; cursor: pointer;
+}
+.p-alert .sn-label { margin-top: 1.1rem; font-size: 0.8rem; opacity: 0.7; }
+.p-alert .sn-row { display: flex; gap: 0.4rem; margin-top: 0.5rem; flex-wrap: wrap; justify-content: center; }
+.p-alert .sn {
+  border: 2px solid #111827; background: transparent; color: #111827; border-radius: 999px;
+  padding: 0.3rem 0.8rem; font: inherit; font-size: 0.8rem; font-weight: 600; cursor: pointer;
+}
+.p-toast {
+  position: absolute; left: 50%; bottom: 4.5rem; transform: translateX(-50%);
+  background: #111827; color: #fafafa; font-size: 0.78rem; border-radius: 999px;
+  padding: 0.35rem 0.9rem; opacity: 0; transition: opacity 0.25s; white-space: nowrap;
+}
+.p-toast.in { opacity: 1; }
+.demo-cta { margin-top: 1rem; }
+.demo-note { font-size: 0.78rem; color: var(--muted-fg); max-width: 34ch; margin: 0.6rem auto 0; }
+@media (max-width: 900px) { .hero-split { justify-content: center; } }
+
 :where(a, button):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 </style>
 </head>
@@ -178,23 +237,67 @@ footer .fine { color: var(--muted-fg); font-size: 0.8125rem; margin-top: 1rem; }
 <main id="top">
 
 <section class="hero">
+  <div class="hero-split">
+  <div class="hero-copy">
   <h1>Reminders that talk, wherever you are.</h1>
   <p class="lede">
-    CHKT Server is the self-hosted browser companion to
-    <a href="https://github.com/lightmorphic/chkt">CHKT</a>, the talking
-    reminders app for Android. Run it on your own hardware and every
-    feature of the phone app is there in your browser too, kept in step
-    by two-way sync.
+    CHKT is a talking reminders app for Android: a sound, then your
+    reminder spoken out loud, repeated until you answer. CHKT Server is
+    its self-hosted companion — every feature in your browser, two-way
+    sync, and a calendar any app can subscribe to.
   </p>
   <div class="ctas">
-    <a class="btn btn-primary" href="#install">Install it</a>
-    <a class="btn" href="https://github.com/lightmorphic/chkt-server">View on GitHub</a>
+    <a class="btn btn-primary" href="https://github.com/lightmorphic/chkt/releases/latest">Get the app</a>
+    <a class="btn" href="#install">Install the server</a>
+    <a class="btn" href="https://github.com/lightmorphic/chkt-server">GitHub</a>
   </div>
   <div class="badge-row">
     <span class="badge">GPL-3.0</span>
     <span class="badge">Docker, one command</span>
     <span class="badge">No tracking, no accounts with us</span>
     <span class="badge">Your data stays on your server</span>
+  </div>
+  </div>
+
+  <div class="demo-wrap">
+    <div class="phone panel" aria-label="Interactive demo of a CHKT alert">
+      <div class="screen" data-screen="list">
+        <div class="p-top">
+          <svg width="22" height="22" viewBox="0 0 48 48" aria-hidden="true"><rect x="2" y="2" width="44" height="44" rx="10" fill="#FBC711"/><path d="M14 25 L21 32 L34 16" stroke="#111827" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          CHKT <span class="ver">v1.0.25</span>
+        </div>
+        <div class="p-chips">
+          <span class="p-chip on">All</span><span class="p-chip">home</span><span class="p-chip">cal</span><span class="p-chip">errands</span>
+        </div>
+        <div class="p-list">
+          <div class="p-card"><div class="t">Take the bread out of the oven</div><div class="w">Today 17:40 · every 5 min until answered</div><div class="g">#home</div></div>
+          <div class="p-card"><div class="t">Call the dentist about Thursday</div><div class="w">Today 19:00</div><div class="g">#errands</div></div>
+          <div class="p-card"><div class="t">Acting group</div><div class="w">Tue 19:30 · weekly · 2 hrs</div><div class="g">#hobby  #cal</div></div>
+          <div class="p-card"><div class="t">Water the tomatoes</div><div class="w">Tomorrow 08:00 · daily</div><div class="g">#home  #garden</div></div>
+        </div>
+        <div class="p-fab" aria-hidden="true">+</div>
+        <div class="p-notif" data-notif>
+          <div class="h"><svg width="12" height="12" viewBox="0 0 48 48" aria-hidden="true"><rect x="2" y="2" width="44" height="44" rx="10" fill="#FBC711"/><path d="M14 25 L21 32 L34 16" stroke="#111827" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg> CHKT · now</div>
+          <div class="t">Take the bread out of the oven</div>
+        </div>
+        <div class="p-toast" data-toast></div>
+      </div>
+      <div class="screen p-alert" data-screen="alert" hidden>
+        <div class="big">Take the bread out of the oven</div>
+        <button class="done" data-done>Done</button>
+        <div class="sn-label">Snooze</div>
+        <div class="sn-row">
+          <button class="sn" data-snooze="10 min">10 min</button>
+          <button class="sn" data-snooze="30 min">30 min</button>
+          <button class="sn" data-snooze="1 hr">1 hr</button>
+        </div>
+      </div>
+    </div>
+    <div class="demo-cta">
+      <button class="btn btn-primary" data-demo-play>&#9654;&#xFE0E; Preview an alert</button>
+    </div>
+    <p class="demo-note">Live demo, drawn and voiced entirely in your browser: the ding is synthesized on the spot and the voice is your browser's own. Nothing is loaded from anywhere.</p>
+  </div>
   </div>
 
   <div class="flow">
@@ -236,13 +339,18 @@ footer .fine { color: var(--muted-fg); font-size: 0.8125rem; margin-top: 1rem; }
     </div>
     <div class="panel">
       <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19 9a5 5 0 010 6"/></svg></div>
-      <h3>Ring, then speak</h3>
-      <p>Four alert styles per reminder, ring and speak, ring only, speak only, or a plain notification, with an optional tone before the speech.</p>
+      <h3>A sound, then the voice</h3>
+      <p>Every alert plays your chosen sound first, then speaks the reminder — never both at once. Three styles per reminder: notification + voice, voice only, or notification only.</p>
     </div>
     <div class="panel">
       <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div>
       <h3>Keeps reminding you</h3>
       <p>Set it to re-alert every 1, 2, or 5 minutes until you answer, with an automatic stop from 15 minutes to 2 hours so it never nags forever.</p>
+    </div>
+    <div class="panel">
+      <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 9h18"/></svg></div>
+      <h3>On your calendar</h3>
+      <p>A CalDAV calendar any app can subscribe to — DAVx&#8309;, Thunderbird, Fastmail, Apple Calendar. Tag a reminder <code>cal</code> and it appears; add an event there and it becomes a reminder, both ways.</p>
     </div>
     <div class="panel">
       <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h7"/></svg></div>
@@ -355,5 +463,83 @@ docker compose up -d</code></pre>
   </main>
 </footer>
 
+<script>
+(function () {
+  "use strict";
+  var play = document.querySelector("[data-demo-play]");
+  if (!play) return;
+  var listScreen = document.querySelector('[data-screen="list"]');
+  var alertScreen = document.querySelector('[data-screen="alert"]');
+  var notif = document.querySelector("[data-notif]");
+  var toast = document.querySelector("[data-toast]");
+  var running = false;
+
+  function ding() {
+    try {
+      var ctx = new (window.AudioContext || window.webkitAudioContext)();
+      [[988, 0], [1319, 0.18]].forEach(function (note) {
+        var osc = ctx.createOscillator(), gain = ctx.createGain();
+        osc.type = "sine"; osc.frequency.value = note[0];
+        gain.gain.setValueAtTime(0.0001, ctx.currentTime + note[1]);
+        gain.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + note[1] + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + note[1] + 0.45);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(ctx.currentTime + note[1]); osc.stop(ctx.currentTime + note[1] + 0.5);
+      });
+      setTimeout(function () { ctx.close(); }, 1200);
+    } catch (e) { /* no audio available: the demo still plays silently */ }
+  }
+
+  function speak() {
+    try {
+      if (!window.speechSynthesis) return;
+      speechSynthesis.cancel();
+      var line = new SpeechSynthesisUtterance("Take the bread out of the oven");
+      line.rate = 0.95;
+      speechSynthesis.speak(line);
+    } catch (e) { /* no speech available */ }
+  }
+
+  function showToast(text) {
+    toast.textContent = text;
+    toast.classList.add("in");
+    setTimeout(function () { toast.classList.remove("in"); }, 2200);
+  }
+
+  function backToList(message) {
+    try { speechSynthesis.cancel(); } catch (e) {}
+    alertScreen.hidden = true;
+    listScreen.hidden = false;
+    notif.classList.remove("in");
+    running = false;
+    play.disabled = false;
+    if (message) showToast(message);
+  }
+
+  play.addEventListener("click", function () {
+    if (running) return;
+    running = true;
+    play.disabled = true;
+    // The real order, on a real phone: notification appears with the
+    // sound, then the full-screen alert, then the voice.
+    notif.classList.add("in");
+    ding();
+    setTimeout(function () {
+      listScreen.hidden = true;
+      alertScreen.hidden = false;
+      speak();
+    }, 1100);
+  });
+
+  alertScreen.querySelector("[data-done]").addEventListener("click", function () {
+    backToList("Done \u2713");
+  });
+  alertScreen.querySelectorAll("[data-snooze]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      backToList("Snoozed " + btn.dataset.snooze);
+    });
+  });
+})();
+</script>
 </body>
 </html>
