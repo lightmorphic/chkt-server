@@ -12,7 +12,12 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      # contents: write, not read — the last step publishes the GitHub
+      # release for this tag. The in-app "new version available" banner
+      # reads releases/latest, so a tag without a release is invisible to
+      # every running install (versions 1.1.15–1.1.21 shipped that way and
+      # nobody was offered them; backfilled since).
+      contents: write
       packages: write
     steps:
       - uses: actions/checkout@v4
@@ -46,3 +51,16 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      # The GitHub release is what running installs actually watch. Body is
+      # this version's CHANGELOG section, so the banner links to real notes.
+      - name: Publish the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          BODY=$(awk -v ver="[${TAG}]" '
+            $0 ~ "^## \\[" { on = index($0, ver) > 0; next }
+            on { print }' CHANGELOG.md)
+          gh release view "$TAG" >/dev/null 2>&1 || \
+            gh release create "$TAG" --title "$TAG" --notes "${BODY:-See CHANGELOG.md}"
