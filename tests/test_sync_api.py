@@ -159,6 +159,18 @@ class SyncApiTest(unittest.TestCase):
         self.assertEqual("Nagging one (renamed)", rec["title"])
         self.assertEqual(6100, rec["nag_started_at"])
 
+    def test_08c_older_app_edit_keeps_the_length(self):
+        """An app that predates the field sends every edit without it. That
+        must not flatten a calendar event back to a moment."""
+        edit = reminder_json("R2d", "cal", "Team meeting, moved", 6300)
+        del edit["durationMinutes"]
+        self._sync({"since": 0, "reminders": [edit], "logs": []})
+
+        got = {x["id"]: x for x in self._sync(
+            {"since": 6250, "reminders": [], "logs": []}).get_json()["reminders"]}
+        self.assertEqual("Team meeting, moved", got["R2d"]["title"])
+        self.assertEqual(45, got["R2d"]["durationMinutes"])
+
     def test_09_acknowledge_deletes_when_asked(self):
         from app import store
         store.acknowledge("R2", 1, "DONE")

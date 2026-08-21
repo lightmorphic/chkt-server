@@ -59,6 +59,11 @@ def sync():
                 store.clear_fired(incoming["id"])
             else:
                 incoming["nag_started_at"] = existing["nag_started_at"] if existing else None
+            # A reminder's length lives on the server and in newer apps. An
+            # older app pushing an edit says nothing about it, so keep what
+            # is there rather than flattening a calendar event to a moment.
+            if incoming["duration_minutes"] is None:
+                incoming["duration_minutes"] = existing["duration_minutes"] if existing else 0
             store.upsert_reminder(incoming)
 
     for record in body.get("logs") or []:
@@ -96,7 +101,11 @@ def _reminder_from_json(o):
             "id": str(o["id"]), "tags": str(o.get("tags") or ""),
             "title": str(o["title"]), "notes": str(o.get("notes") or ""),
             "due_at": int(o["dueAt"]) if o.get("dueAt") is not None else None,
-            "duration_minutes": max(0, int(o.get("durationMinutes") or 0)),
+            # None means the app never mentioned it. An app from before
+            # reminders had a length doesn't, and absent has to mean
+            # "unchanged" — see the merge in sync().
+            "duration_minutes": (max(0, int(o["durationMinutes"]))
+                                 if o.get("durationMinutes") is not None else None),
             "repeat_rule": str(o.get("repeatRule") or ""),
             "alert_mode": store.normalize_alert_mode(o.get("alertMode")),
             "pre_tone": 0,

@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.1.17]
+
+### Fixed
+- A reminder's length was wiped by the next sync from a phone. Every
+  released version of the app predates the field, so it never sends it,
+  and the merge read "absent" as "zero" — set a length on the calendar,
+  edit anything on your phone, and the event collapsed back to a moment.
+  Absent now means unchanged, the same way the server already protects
+  its own in-progress re-alert state, which the app likewise never sends.
+
 ## [1.1.16]
 
 ### Added
