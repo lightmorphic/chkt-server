@@ -153,6 +153,17 @@ def reminder_snooze(reminder_id):
     return redirect(request.referrer or url_for("views.home"))
 
 
+@bp.get("/state")
+@login_required
+def state():
+    """One tiny number a page can poll to learn "something changed": the
+    newest updated_at across all reminders, deletions included. Sync pulls,
+    CalDAV writes and edits from other tabs all move it."""
+    with db.connect() as conn:
+        row = conn.execute("SELECT COALESCE(MAX(updated_at), 0) AS latest FROM reminders").fetchone()
+    return jsonify({"latest": row["latest"]})
+
+
 @bp.get("/stats")
 @login_required
 def stats():

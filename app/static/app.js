@@ -28,6 +28,33 @@
     });
   });
 
+  /* ---- The reminder list keeps itself current. ----
+     Changes arrive behind the page's back — a phone sync, a calendar app
+     writing over CalDAV, another tab — so the list watches /state (the
+     newest updated_at) and reloads when it moves. Checked when the tab
+     regains focus, which is the moment staleness is actually noticed, and
+     every 45s while visible as a fallback. */
+  (function () {
+    if (!document.querySelector("[data-live-list]")) return;
+    var known = null;
+
+    function check() {
+      if (document.hidden) return;
+      fetch("/state", { credentials: "same-origin" })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (state) {
+          if (!state) return;
+          if (known === null) { known = state.latest; return; }
+          if (state.latest !== known) window.location.reload();
+        })
+        .catch(function () { /* offline or logged out: just stay put */ });
+    }
+
+    check();
+    document.addEventListener("visibilitychange", check);
+    setInterval(check, 45000);
+  })();
+
   /* ---- Tags: chips plus autocomplete over the tags that already exist. ----
      The plain comma-separated input is what the form really submits and what
      you get with no JavaScript; this replaces it in place. Existing tags are

@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.1.24]
+
+### Added
+- The reminder list keeps itself current. Changes that arrive behind the
+  page's back — a phone sync, a calendar app writing over CalDAV, another
+  tab — used to sit invisible until you refreshed by hand. The list now
+  checks for changes the moment you come back to the tab, and every 45
+  seconds while it's visible, and reloads itself when something moved.
+
 ## [1.1.23]
 
 ### Fixed
