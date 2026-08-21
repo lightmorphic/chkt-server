@@ -98,7 +98,7 @@ def _existing(table, record_id):
 def _reminder_from_json(o):
     try:
         return {
-            "id": str(o["id"]), "tags": str(o.get("tags") or ""),
+            "id": str(o["id"]), "tags": store.normalize_tags(o.get("tags") or ""),
             "title": str(o["title"]), "notes": str(o.get("notes") or ""),
             "due_at": int(o["dueAt"]) if o.get("dueAt") is not None else None,
             # None means the app never mentioned it. An app from before

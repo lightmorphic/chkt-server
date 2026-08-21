@@ -19,16 +19,15 @@
   <label for="f-notes">Notes (shown, not spoken)</label>
   <textarea id="f-notes" name="notes">{{ reminder.notes if reminder else '' }}</textarea>
 
-  <label for="f-tags">Tags, separated by commas (optional)</label>
-  <input id="f-tags" name="tags"
-         value="{{ reminder.tags if reminder else preset_tag }}"
-         placeholder="home, chores">
-  {% if known_tags %}
-  <p class="hint">Existing tags: {% for t in known_tags %}#{{ t }} {% endfor %}</p>
-  {% endif %}
-  {% if calendar_tag %}
-  <p class="hint">Tag a reminder <strong>#{{ calendar_tag }}</strong> to put it on your calendar.</p>
-  {% endif %}
+  <label for="f-tags">Tags (optional)</label>
+  <div data-tagfield data-known="{{ known_tags|join(',') }}">
+    <input id="f-tags" name="tags"
+           value="{{ reminder.tags if reminder else preset_tag }}"
+           placeholder="home, chores" autocapitalize="off" spellcheck="false">
+  </div>
+  <p class="hint">Start typing and pick from the tags you already have. A word that isn't
+    a tag yet needs the "add as a new tag" button, so a typo can't quietly become one.
+    {% if calendar_tag %}Tag a reminder <strong>#{{ calendar_tag }}</strong> to put it on your calendar.{% endif %}</p>
 
   <label for="f-due">When</label>
   <input id="f-due" type="datetime-local" name="due" value="{{ due_local }}">

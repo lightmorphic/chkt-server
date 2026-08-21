@@ -451,8 +451,8 @@ def _put(rid, existing):
     # An event created in a calendar app has to keep showing there. With a
     # tag filter set it wouldn't, unless it wears the tag.
     tag = _calendar_tag()
-    if tag and tag.casefold() not in [t.casefold() for t in store.tag_list(record)]:
-        record["tags"] = ", ".join(filter(None, [record.get("tags", ""), tag]))
+    if tag and tag.lower() not in store.tag_list(record):
+        record["tags"] = store.normalize_tags(record.get("tags", "") + ", " + tag)
     record["deleted_at"] = None
     record["updated_at"] = now
     store.upsert_reminder(record)

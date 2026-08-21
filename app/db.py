@@ -95,6 +95,11 @@ MIGRATIONS = [
     # Reminders gained a length so they can be published to a calendar as a
     # block rather than a moment. 0 — every existing reminder — is a moment.
     "ALTER TABLE reminders ADD COLUMN duration_minutes INTEGER NOT NULL DEFAULT 0",
+    # Tags became lowercase-only, so "Cal" and "cal" stop being two tags that
+    # read identically. Touch updated_at on the rows that actually change, so
+    # phones pull the tidied version instead of pushing the old one back.
+    "UPDATE reminders SET tags = lower(tags), updated_at = CAST(strftime('%s','now') AS INTEGER) * 1000 "
+    "WHERE tags <> lower(tags)",
 ]
 
 

@@ -70,6 +70,22 @@ def reminders(include_deleted=False):
     return rows
 
 
+def normalize_tags(raw) -> str:
+    """Tags are lowercase, trimmed, in the order given, no duplicates.
+    Case was only ever a way to end up with "Cal" and "cal" as two tags that
+    look identical in a list and behave differently everywhere else."""
+    if isinstance(raw, str):
+        parts = raw.split(",")
+    else:
+        parts = list(raw or [])
+    seen = []
+    for part in parts:
+        tag = str(part).strip().lower()
+        if tag and tag not in seen:
+            seen.append(tag)
+    return ", ".join(seen)
+
+
 def tag_list(reminder):
     return [t.strip() for t in (reminder.get("tags") or "").split(",") if t.strip()]
 
@@ -90,6 +106,10 @@ def get_reminder(reminder_id):
 
 
 def upsert_reminder(record: dict):
+    # The one place every write passes through, so tags can't arrive
+    # mixed-case by some route that forgot to tidy them.
+    record = dict(record)
+    record["tags"] = normalize_tags(record.get("tags") or "")
     with db.connect() as conn:
         conn.execute(
             "INSERT INTO reminders ({fields}) VALUES ({marks}) "

@@ -15,7 +15,7 @@ os.environ["CHKT_INSECURE_COOKIES"] = "1"
 from app import create_app  # noqa: E402  (env must be set first)
 from app import caldav, db, ical, store  # noqa: E402
 from app.auth import new_access_key  # noqa: E402
-from app.settings_store import put as setting_put  # noqa: E402
+from app.settings_store import get as setting_get, put as setting_put  # noqa: E402
 
 CAL = caldav.CALENDAR_PATH
 
@@ -279,9 +279,10 @@ class CalendarTagTest(unittest.TestCase):
         self.assertIn("404 Not Found", body)
 
 
-class TagSuggestionTest(unittest.TestCase):
-    """The calendar tag is offered on the edit page before anything wears
-    it — otherwise it's the one tag the suggestions can never show you."""
+class TagRulesTest(unittest.TestCase):
+    """Tags are lowercase everywhere, and the calendar setting can only name
+    a tag that exists — picking one nothing wears would publish an empty
+    calendar and read as a broken feature."""
 
     @classmethod
     def setUpClass(cls):
@@ -299,21 +300,50 @@ class TagSuggestionTest(unittest.TestCase):
             cls.client.post("/login", data={
                 "csrf": re.search(r'name="csrf" value="([^"]+)"', login).group(1),
                 "username": "devtest", "password": "local-dev-smoke-test-1"})
+        store.upsert_reminder(_reminder("mixedcase", "Shouty tags", 1_900_000_500_000,
+                                        tags="Home, CHORES"))
 
     @classmethod
     def tearDownClass(cls):
         setting_put("calendar_tag", "")
 
-    def test_calendar_tag_is_suggested_even_when_unused(self):
-        setting_put("calendar_tag", "cal")
-        page = self.client.get("/reminder/new").get_data(as_text=True)
-        self.assertIn("#cal", page)
-        self.assertIn("put it on your calendar", page)
+    def _csrf(self, path="/settings"):
+        page = self.client.get(path).get_data(as_text=True)
+        return re.search(r'name="csrf" value="([^"]+)"', page).group(1)
 
-    def test_nothing_extra_when_no_tag_is_set(self):
-        setting_put("calendar_tag", "")
+    def test_01_tags_are_lowercased_on_the_way_in(self):
+        self.assertEqual("home, chores", store.normalize_tags("  Home , CHORES "))
+        self.assertEqual("cal", store.normalize_tags("cal, Cal, CAL"))
+
+    def test_02_settings_offers_only_tags_that_exist(self):
+        page = self.client.get("/settings").get_data(as_text=True)
+        self.assertIn('<option value="home"', page)
+        self.assertNotIn('<option value="nonexistent"', page)
+
+    def test_03_a_tag_nothing_wears_is_refused(self):
+        self.client.post("/settings", data={
+            "csrf": self._csrf(), "section": "calendar",
+            "calendar_tag": "nosuchtag", "calendar_all_day_hour": "9"})
+        self.assertEqual("", setting_get("calendar_tag", ""))
+
+    def test_04_an_existing_tag_is_accepted(self):
+        self.client.post("/settings", data={
+            "csrf": self._csrf(), "section": "calendar",
+            "calendar_tag": "home", "calendar_all_day_hour": "9"})
+        self.assertEqual("home", setting_get("calendar_tag", ""))
+
+    def test_05_the_editor_says_which_tag_reaches_the_calendar(self):
         page = self.client.get("/reminder/new").get_data(as_text=True)
-        self.assertNotIn("put it on your calendar", page)
+        self.assertIn("put it on your calendar", page)
+        self.assertIn("#home", page)
+
+    def test_06_the_tag_field_carries_the_known_tags_for_autocomplete(self):
+        page = self.client.get("/reminder/new").get_data(as_text=True)
+        self.assertIn("data-tagfield", page)
+        known = re.search(r'data-known="([^"]*)"', page).group(1).split(",")
+        self.assertIn("chores", known)
+        self.assertIn("home", known)
+        self.assertEqual(known, [t.lower() for t in known])
 
 
 class ForwardedSchemeTest(unittest.TestCase):

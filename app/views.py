@@ -94,7 +94,7 @@ def reminder_edit(reminder_id=None):
             due_local = f"{today}T{due_time}"
     return render_template(
         "edit_reminder.html",
-        reminder=reminder, known_tags=_tag_suggestions(),
+        reminder=reminder, known_tags=store.all_tags(),
         alert_modes=ALERT_MODES, csrf=csrf_token(), reuse=reuse,
         preset_tag=request.args.get("tag", ""),
         calendar_tag=setting("calendar_tag", "").strip(),
@@ -184,7 +184,10 @@ def settings_page():
         elif section == "calendar":
             hour = (request.form.get("calendar_all_day_hour") or "9").strip()
             setting_put("calendar_all_day_hour", hour if hour.isdigit() and 0 <= int(hour) <= 23 else "9")
-            setting_put("calendar_tag", (request.form.get("calendar_tag") or "").strip())
+            chosen = store.normalize_tags(request.form.get("calendar_tag") or "")
+            # Only a tag that exists: choosing one nothing wears would
+            # publish an empty calendar and look like a broken feature.
+            setting_put("calendar_tag", chosen if chosen in store.all_tags() else "")
             message = "Calendar settings saved."
     from .update_check import VERSION, available_update
     from .settings_store import quiet_hours
@@ -196,6 +199,7 @@ def settings_page():
         caldav_url=request.url_root.rstrip("/") + caldav_path,
         calendar_all_day_hour=setting("calendar_all_day_hour", "9") or "9",
         calendar_tag=setting("calendar_tag", ""),
+        known_tags=store.all_tags(),
         server_version=VERSION, update_available=available_update(),
         smtp_password_set=bool(setting("smtp_password")),
         totp_enabled=bool(setting("totp_secret")),
@@ -401,18 +405,6 @@ def _duration_minutes(form):
         return 0
 
 
-def _tag_suggestions():
-    """Tags already in use, plus the calendar tag even when nothing wears it
-    yet. Otherwise there's a chicken and egg: the tag that decides what
-    reaches your calendar is the one tag the list can never suggest, because
-    suggestions come from reminders that already have it."""
-    tags = store.all_tags()
-    calendar_tag = setting("calendar_tag", "").strip()
-    if calendar_tag and calendar_tag.casefold() not in [t.casefold() for t in tags]:
-        tags = sorted(tags + [calendar_tag])
-    return tags
-
-
 def _reminder_from_form(form, existing):
     title = (form.get("title") or "").strip()
     if not title:
@@ -468,8 +460,7 @@ def _reminder_from_form(form, existing):
         "id": db.new_id(), "created_at": now, "snoozed_until": None, "deleted_at": None,
     }
     record = dict(base)
-    tags = ", ".join(
-        t.strip() for t in (form.get("tags") or "").split(",") if t.strip())
+    tags = (form.get("tags") or "").strip()
     record.update({
         "tags": tags,
         "title": title,

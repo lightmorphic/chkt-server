@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.1.20]
+
+### Changed
+- **Tags are lowercase, everywhere.** "Cal" and "cal" were two different
+  tags that looked identical in a list, which is a trap rather than a
+  feature. Existing tags are lowercased on upgrade (and their reminders
+  marked changed, so phones pull the tidied version rather than pushing
+  the old one back), and every route in — the web form, sync, and events
+  arriving over CalDAV — passes through one rule.
+- **The tag box is chips and autocomplete.** Start typing and the tags you
+  already have appear; click one and it becomes a chip. A word that isn't
+  a tag yet takes a deliberate "add as a new tag" click, so a typo can't
+  quietly become a tag that sits in the list forever looking almost right.
+  Plain comma-separated text still works with JavaScript off.
+- **The calendar tag is chosen from tags that exist**, rather than typed.
+  Naming a tag nothing wears published an empty calendar and read as a
+  broken feature. Supersedes 1.1.19, which approached this from the wrong
+  end by offering a tag that didn't exist yet: make the tag on a reminder,
+  then choose it in Settings.
+
 ## [1.1.19]
 
 ### Added

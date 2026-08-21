@@ -91,12 +91,19 @@ or rerun <code>deploy.sh</code>. Your data is untouched either way.</p>
       <input type="hidden" name="csrf" value="{{ csrf }}">
       <input type="hidden" name="section" value="calendar">
       <label for="s-caltag">Only publish reminders tagged</label>
-      <input id="s-caltag" type="text" name="calendar_tag" value="{{ calendar_tag }}"
-             placeholder="cal" autocapitalize="off" spellcheck="false">
-      <p class="hint">Leave empty to publish every timed reminder. Fill it in and only
-        reminders wearing that tag reach the calendar — so a daily "take pills" stays out
-        of the way while your Tuesday rehearsal doesn't. Tag reminders in the app or here;
-        capitals don't matter. Anything you add from a calendar app gets the tag
+      <select id="s-caltag" name="calendar_tag">
+        <option value="">Everything with a time</option>
+        {% for t in known_tags %}
+        <option value="{{ t }}" {% if calendar_tag == t %}selected{% endif %}>#{{ t }}</option>
+        {% endfor %}
+        {% if calendar_tag and calendar_tag not in known_tags %}
+        <option value="{{ calendar_tag }}" selected>#{{ calendar_tag }} — no reminders use this</option>
+        {% endif %}
+      </select>
+      <p class="hint">Only tags that exist are offered, so you can't pick one that would
+        publish an empty calendar. Tag a reminder first — in the app or here — and it
+        appears in this list. Choose "Everything with a time" to publish the lot, which is
+        how CHKT starts out. Anything you add from a calendar app gets the tag
         automatically, so it stays visible.</p>
 
       <label for="s-allday">All-day events alert at</label>

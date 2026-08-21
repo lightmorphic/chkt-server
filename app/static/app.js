@@ -28,6 +28,122 @@
     });
   });
 
+  /* ---- Tags: chips plus autocomplete over the tags that already exist. ----
+     The plain comma-separated input is what the form really submits and what
+     you get with no JavaScript; this replaces it in place. Existing tags are
+     one click. A word that isn't a tag yet takes a deliberate second action,
+     which is what stops "grocries" quietly becoming a tag of its own. */
+  (function () {
+    var field = document.querySelector("[data-tagfield]");
+    if (!field) return;
+    var input = field.querySelector("input[name=tags]");
+    var known = (field.dataset.known || "").split(",")
+      .map(function (t) { return t.trim().toLowerCase(); })
+      .filter(Boolean);
+
+    var tags = splitTags(input.value);
+    // The real value now travels in a hidden twin; the visible box becomes
+    // somewhere to type, and must stop being a form field itself.
+    var store = document.createElement("input");
+    store.type = "hidden";
+    store.name = "tags";
+    field.appendChild(store);
+    input.removeAttribute("name");
+    input.value = "";
+    input.placeholder = "Start typing…";
+
+    var chips = document.createElement("div");
+    chips.className = "tag-chips";
+    field.insertBefore(chips, input);
+    var menu = document.createElement("div");
+    menu.className = "tag-suggestions";
+    field.appendChild(menu);
+
+    function splitTags(raw) {
+      var out = [];
+      (raw || "").split(",").forEach(function (part) {
+        var tag = part.trim().toLowerCase();
+        if (tag && out.indexOf(tag) === -1) out.push(tag);
+      });
+      return out;
+    }
+
+    function render() {
+      store.value = tags.join(", ");
+      chips.textContent = "";
+      tags.forEach(function (tag) {
+        var chip = document.createElement("span");
+        chip.className = "tag-chip";
+        chip.textContent = "#" + tag;
+        var remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "tag-chip-x";
+        remove.setAttribute("aria-label", "Remove tag " + tag);
+        remove.textContent = "×";
+        remove.addEventListener("click", function () {
+          tags = tags.filter(function (t) { return t !== tag; });
+          render();
+          input.focus();
+        });
+        chip.appendChild(remove);
+        chips.appendChild(chip);
+      });
+      suggest();
+    }
+
+    function add(tag) {
+      tag = (tag || "").trim().toLowerCase();
+      if (tag && tags.indexOf(tag) === -1) tags.push(tag);
+      input.value = "";
+      render();
+    }
+
+    function suggest() {
+      var typed = input.value.trim().toLowerCase();
+      menu.textContent = "";
+      var matches = known.filter(function (tag) {
+        return tags.indexOf(tag) === -1 && (!typed || tag.indexOf(typed) !== -1);
+      }).slice(0, 8);
+
+      matches.forEach(function (tag) {
+        var pick = document.createElement("button");
+        pick.type = "button";
+        pick.className = "tag-suggestion";
+        pick.textContent = "#" + tag;
+        pick.addEventListener("click", function () { add(tag); input.focus(); });
+        menu.appendChild(pick);
+      });
+
+      // Only offered once you've typed something that is genuinely new.
+      if (typed && known.indexOf(typed) === -1 && tags.indexOf(typed) === -1) {
+        var make = document.createElement("button");
+        make.type = "button";
+        make.className = "tag-suggestion tag-suggestion-new";
+        make.textContent = "Add “" + typed + "” as a new tag";
+        make.addEventListener("click", function () { add(typed); input.focus(); });
+        menu.appendChild(make);
+      }
+    }
+
+    input.addEventListener("input", suggest);
+    input.addEventListener("keydown", function (e) {
+      var typed = input.value.trim().toLowerCase();
+      if (e.key === "Enter") {
+        // Enter is a shortcut for a tag that already exists, never a way to
+        // invent one — that stays a deliberate click.
+        e.preventDefault();
+        if (typed && known.indexOf(typed) !== -1) add(typed);
+        return;
+      }
+      if (e.key === "Backspace" && !input.value && tags.length) {
+        tags.pop();
+        render();
+      }
+    });
+
+    render();
+  })();
+
   /* ---- Edit form: show only the controls for the chosen repeat kind. ---- */
   var repeatSelect = document.querySelector("[data-repeat-select]");
   function syncRepeatPanels() {
