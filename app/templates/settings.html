@@ -77,6 +77,31 @@ or rerun <code>deploy.sh</code>. Your data is untouched either way.</p>
   </section>
 
   <section class="panel">
+    <h2>Calendar (CalDAV)</h2>
+    <p class="hint">Subscribe to your reminders from any calendar app — DAVx⁵ on Android,
+      Thunderbird, Evolution or Apple Calendar on a desktop. Anything you add to the CHKT
+      calendar becomes a reminder: notification and voice, repeating every 5 minutes for an
+      hour until you answer it.</p>
+    <label for="s-caldav-url">Address to subscribe to</label>
+    <input id="s-caldav-url" type="text" value="{{ caldav_url }}" readonly onclick="this.select()">
+    <p class="hint">Username: anything you like. Password: a device access key from
+      <a href="{{ url_for('views.devices') }}">Devices</a> — the same keys the phone app uses.
+      Use it over HTTPS: the key travels on every request.</p>
+    <form method="post">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <input type="hidden" name="section" value="calendar">
+      <label for="s-allday">All-day events alert at</label>
+      <select id="s-allday" name="calendar_all_day_hour">
+        {% for h in range(24) %}
+        <option value="{{ h }}" {% if calendar_all_day_hour|int == h %}selected{% endif %}>{{ "%02d:00"|format(h) }}</option>
+        {% endfor %}
+      </select>
+      <p class="hint">An all-day event has no time of day, so a reminder made from one needs to be given a time.</p>
+      <p style="margin-bottom:0"><button class="btn-primary" type="submit">Save calendar settings</button></p>
+    </form>
+  </section>
+
+  <section class="panel">
     <h2>Two-factor sign-in</h2>
     {% if totp_enabled %}
       <p>✓ 2FA is on. Signing in asks for a code from your authenticator app.</p>

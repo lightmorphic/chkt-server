@@ -96,6 +96,7 @@ def _reminder_from_json(o):
             "id": str(o["id"]), "tags": str(o.get("tags") or ""),
             "title": str(o["title"]), "notes": str(o.get("notes") or ""),
             "due_at": int(o["dueAt"]) if o.get("dueAt") is not None else None,
+            "duration_minutes": max(0, int(o.get("durationMinutes") or 0)),
             "repeat_rule": str(o.get("repeatRule") or ""),
             "alert_mode": store.normalize_alert_mode(o.get("alertMode")),
             "pre_tone": 0,
@@ -122,7 +123,8 @@ def _reminder_from_json(o):
 def _reminder_to_json(r):
     return {
         "id": r["id"], "tags": r["tags"], "title": r["title"], "notes": r["notes"],
-        "dueAt": r["due_at"], "repeatRule": r["repeat_rule"], "alertMode": r["alert_mode"],
+        "dueAt": r["due_at"], "durationMinutes": r["duration_minutes"],
+        "repeatRule": r["repeat_rule"], "alertMode": r["alert_mode"],
         "preTone": bool(r["pre_tone"]), "enabled": bool(r["enabled"]),
         "vibrate": bool(r["vibrate"]), "respectDnd": bool(r["respect_dnd"]),
         "nagIntervalMinutes": r["nag_interval_minutes"],

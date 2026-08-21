@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS reminders (
     title TEXT NOT NULL,
     notes TEXT NOT NULL DEFAULT '',
     due_at INTEGER,
+    duration_minutes INTEGER NOT NULL DEFAULT 0,
     repeat_rule TEXT NOT NULL DEFAULT '',
     alert_mode TEXT NOT NULL DEFAULT 'NOTIFY_AND_SPEAK',
     pre_tone INTEGER NOT NULL DEFAULT 0,
@@ -91,6 +92,9 @@ MIGRATIONS = [
     # UPDATEs, safe to re-run: nothing matches after the first pass.
     "UPDATE reminders SET alert_mode = 'NOTIFY_AND_SPEAK' WHERE alert_mode = 'RING_AND_SPEAK'",
     "UPDATE reminders SET alert_mode = 'NOTIFY_ONLY' WHERE alert_mode = 'RING_ONLY'",
+    # Reminders gained a length so they can be published to a calendar as a
+    # block rather than a moment. 0 — every existing reminder — is a moment.
+    "ALTER TABLE reminders ADD COLUMN duration_minutes INTEGER NOT NULL DEFAULT 0",
 ]
 
 

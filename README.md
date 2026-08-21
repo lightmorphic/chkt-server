@@ -9,6 +9,8 @@ feature of the phone app is there in the browser too:
   quiet hours, location reminders, snooze chosen at alert time, and a
   voice "add by speaking" button, installable as an app (PWA) with desktop
   notifications and spoken alerts.
+- **Calendar (CalDAV)**, subscribe to your reminders from any calendar app on
+  any device, and anything you add to that calendar becomes a reminder.
 - **Sync**, your phone and browser always match. Off by default on the
   phone; one server address and access key turns it on.
 - **Backups**, daily local snapshots plus a one-click "download everything"
@@ -119,6 +121,33 @@ arrangement for most people.
 1. Open **Devices**, create an access key, copy it.
 2. In the CHKT app: **Settings → Sync**, enter your server address and the
    key, flip sync on, press **Test connection**.
+
+## Subscribe from a calendar app
+
+Your reminders as a calendar, readable and writable, on whatever calendar app
+you already use.
+
+1. Open **Devices**, create an access key, copy it.
+2. Point your calendar app at `https://your-server/dav/`. Any username will
+   do; the password is the access key.
+   - **Android**: DAVx⁵ → add account → "Login with URL and user name".
+   - **Thunderbird**: New Calendar → On the Network → CalDAV.
+   - **Evolution / Apple Calendar**: add a CalDAV account with that address.
+
+Reminders appear as events at their due time, as long as a length as you gave
+them (none by default, so a plain reminder is a moment rather than a block).
+Repeats come across as proper recurring events.
+
+Add an event to the CHKT calendar and it becomes a reminder: it shows a
+notification and speaks, and repeats every 5 minutes for an hour until you
+answer it. All-day events have no time of day, so they alert at the hour set
+in **Settings → Calendar** (09:00 to begin with).
+
+Two things worth knowing. The access key travels on every request, so use
+HTTPS — the same as everything else here. And CHKT's repeat vocabulary is
+smaller than iCalendar's: an exotic recurrence ("last Friday of the month",
+"every other Tuesday") lands on the closest rule CHKT can express, which
+errs towards repeating more often rather than never firing.
 
 ## Day-to-day
 

@@ -19,7 +19,8 @@ from app.auth import new_access_key  # noqa: E402
 def reminder_json(rid, tags, title, updated_at, **kw):
     base = {
         "id": rid, "tags": tags, "title": title, "notes": "",
-        "dueAt": 1900000000000, "repeatRule": "", "alertMode": "NOTIFY_AND_SPEAK",
+        "dueAt": 1900000000000, "durationMinutes": 0,
+        "repeatRule": "", "alertMode": "NOTIFY_AND_SPEAK",
         "preTone": False, "enabled": True, "snoozedUntil": None,
         "vibrate": True, "respectDnd": False, "nagIntervalMinutes": 0,
         "nagStopAfterMinutes": 60, "deleteAfterDismissed": False,
@@ -128,6 +129,21 @@ class SyncApiTest(unittest.TestCase):
         self.assertFalse(rec["vibrate"])
         self.assertTrue(rec["respectDnd"])
         self.assertTrue(rec["deleteAfterDismissed"])
+
+    def test_08a_duration_round_trips_and_defaults_to_zero(self):
+        """A reminder's length rides the sync contract; an older app that
+        doesn't know the field yet still syncs, as a point in time."""
+        self._sync({"since": 0, "logs": [],
+                    "reminders": [reminder_json("R2d", "cal", "Team meeting", 6200,
+                                                durationMinutes=45)]})
+        legacy = reminder_json("R2e", "cal", "Older app, no length", 6200)
+        del legacy["durationMinutes"]
+        self._sync({"since": 0, "reminders": [legacy], "logs": []})
+
+        got = {x["id"]: x for x in self._sync(
+            {"since": 6100, "reminders": [], "logs": []}).get_json()["reminders"]}
+        self.assertEqual(45, got["R2d"]["durationMinutes"])
+        self.assertEqual(0, got["R2e"]["durationMinutes"])
 
     def test_08b_sync_preserves_server_nag_state(self):
         # The server is mid-nag on R2 (fired once, waiting on a re-alert).

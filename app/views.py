@@ -180,12 +180,19 @@ def settings_page():
                 end=(request.form.get("quiet_end") or "07:00"),
             )
             message = "Quiet hours saved."
+        elif section == "calendar":
+            hour = (request.form.get("calendar_all_day_hour") or "9").strip()
+            setting_put("calendar_all_day_hour", hour if hour.isdigit() and 0 <= int(hour) <= 23 else "9")
+            message = "Calendar settings saved."
     from .update_check import VERSION, available_update
     from .settings_store import quiet_hours
     values = {k: setting(k) for k in ("alert_email", "smtp_host", "smtp_port",
                                       "smtp_from", "smtp_username")}
+    from .caldav import ROOT_PATH as caldav_path
     return render_template(
         "settings.html", values=values, message=message,
+        caldav_url=request.url_root.rstrip("/") + caldav_path,
+        calendar_all_day_hour=setting("calendar_all_day_hour", "9") or "9",
         server_version=VERSION, update_available=available_update(),
         smtp_password_set=bool(setting("smtp_password")),
         totp_enabled=bool(setting("totp_secret")),
@@ -381,6 +388,16 @@ def _millis_to_local(millis: int) -> str:
     return datetime.fromtimestamp(millis / 1000).strftime("%Y-%m-%dT%H:%M")
 
 
+def _duration_minutes(form):
+    """How long the thing itself takes, for calendars. Anything unparseable
+    or negative means a point in time, same as leaving it blank."""
+    raw = (form.get("duration_minutes") or "").strip()
+    try:
+        return max(0, min(int(raw), 9999))
+    except ValueError:
+        return 0
+
+
 def _reminder_from_form(form, existing):
     title = (form.get("title") or "").strip()
     if not title:
@@ -443,6 +460,7 @@ def _reminder_from_form(form, existing):
         "title": title,
         "notes": (form.get("notes") or "").strip(),
         "due_at": due_at,
+        "duration_minutes": _duration_minutes(form),
         "repeat_rule": rule,
         "alert_mode": store.normalize_alert_mode(form.get("alert_mode")),
         # No longer settable in the UI; kept only so existing rows don't

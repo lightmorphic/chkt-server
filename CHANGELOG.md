@@ -1,6 +1,23 @@
 # Changelog
 
-## [Unreleased]
+## [1.1.16]
+
+### Added
+- **Calendar (CalDAV).** CHKT publishes your reminders as a calendar any
+  calendar app can subscribe to — DAVx⁵ on Android, Thunderbird,
+  Evolution or Apple Calendar on a desktop — and it works both ways: an
+  event added to the CHKT calendar comes back as a reminder that gives a
+  notification and speaks, and repeats every 5 minutes for an hour until
+  it's answered. Subscribe to `/dav/` with any username and a device
+  access key as the password (Settings shows the address). Reminders
+  carry their repeat rule across as an `RRULE`, and their alert settings
+  survive a round trip through a calendar app rather than being reset.
+- Reminders have a length. It defaults to nothing — a reminder is a
+  moment — but set one and the calendar shows a block of that size, so a
+  meeting looks like a meeting. Settable in the app and on the web, and
+  it rides the sync contract as `durationMinutes`.
+- An all-day event has no time of day, so Settings has the hour that
+  reminders made from one should alert (09:00 unless you change it).
 
 ### Changed
 - History now takes every ended reminder, not just one-times: a repeating

@@ -19,7 +19,7 @@ def normalize_alert_mode(value):
 
 
 REMINDER_FIELDS = (
-    "id", "tags", "title", "notes", "due_at", "repeat_rule", "alert_mode",
+    "id", "tags", "title", "notes", "due_at", "duration_minutes", "repeat_rule", "alert_mode",
     "pre_tone", "enabled", "vibrate", "respect_dnd", "nag_interval_minutes",
     "nag_stop_after_minutes", "nag_started_at", "delete_after_dismissed",
     "snoozed_until", "location_trigger", "latitude",

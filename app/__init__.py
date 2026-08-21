@@ -3,7 +3,7 @@ from datetime import timedelta
 
 from flask import Flask
 
-from . import api, auth, backup, db, pushsvc, views
+from . import api, auth, backup, caldav, db, pushsvc, views
 
 
 def create_app():
@@ -36,6 +36,7 @@ def create_app():
     app.register_blueprint(auth.bp)
     app.register_blueprint(views.bp)
     app.register_blueprint(api.bp)
+    app.register_blueprint(caldav.bp)
 
     @app.after_request
     def harden(resp):

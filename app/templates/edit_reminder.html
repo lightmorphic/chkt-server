@@ -31,6 +31,12 @@
   <input id="f-due" type="datetime-local" name="due" value="{{ due_local }}">
   <p class="hint">Leave empty for a location-only reminder.</p>
 
+  <label for="f-duration">How long it takes (minutes)</label>
+  <input id="f-duration" type="number" name="duration_minutes" min="0" max="9999"
+         value="{{ reminder.duration_minutes if reminder and reminder.duration_minutes else '' }}">
+  <p class="hint">Leave empty for a point in time. Only affects how the reminder
+     looks on a calendar, never the alert.</p>
+
   <fieldset>
     <label for="f-repeat">Repeat</label>
     <select id="f-repeat" name="repeat_kind" data-repeat-select>

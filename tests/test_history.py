@@ -19,6 +19,7 @@ def _reminder(rid, title, enabled, repeat_rule="", location_trigger="NONE", due_
     now = db.now_millis()
     return {
         "id": rid, "tags": "", "title": title, "notes": "", "due_at": due_at,
+        "duration_minutes": 0,
         "repeat_rule": repeat_rule, "alert_mode": "NOTIFY_AND_SPEAK", "pre_tone": 0,
         "enabled": 1 if enabled else 0, "vibrate": 1, "respect_dnd": 0,
         "nag_interval_minutes": 0, "nag_stop_after_minutes": 60, "nag_started_at": None,
