@@ -199,6 +199,16 @@ def settings_page():
                 end=(request.form.get("quiet_end") or "07:00"),
             )
             message = "Quiet hours saved."
+        elif section == "follow":
+            from .settings_store import save_form as _save
+            _save(request.form, ["remote_cal_url", "remote_cal_user", "remote_cal_password"])
+            setting_put("remote_cal_enabled", "1" if request.form.get("remote_cal_enabled") else "0")
+            from . import remote_cal
+            # An immediate pass, so Save doubles as Test: the status line
+            # under the form says how it went without waiting a minute.
+            status = remote_cal.sync_once()
+            setting_put("remote_cal_status", status)
+            message = "Followed calendar saved. " + status
         elif section == "calendar":
             hour = (request.form.get("calendar_all_day_hour") or "9").strip()
             setting_put("calendar_all_day_hour", hour if hour.isdigit() and 0 <= int(hour) <= 23 else "9")
@@ -224,6 +234,13 @@ def settings_page():
         caldav_url=request.url_root.rstrip("/") + caldav_path,
         calendar_all_day_hour=setting("calendar_all_day_hour", "9") or "9",
         calendar_tag=setting("calendar_tag", ""),
+        follow={
+            "enabled": setting("remote_cal_enabled") == "1",
+            "url": setting("remote_cal_url", ""),
+            "username": setting("remote_cal_user", ""),
+            "password_set": bool(setting("remote_cal_password")),
+            "status": setting("remote_cal_status", "Never checked."),
+        },
         known_tags=store.all_tags(),
         server_version=VERSION, update_available=available_update(),
         smtp_password_set=bool(setting("smtp_password")),

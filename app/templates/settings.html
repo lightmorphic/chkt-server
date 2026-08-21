@@ -119,6 +119,47 @@ Your data is untouched either way.</p>
   </section>
 
   <section class="panel">
+    <h2>Follow a calendar</h2>
+    <p class="hint">Point CHKT at a calendar on your calendar service (Fastmail, iCloud,
+      Nextcloud — anything CalDAV) and events you create THERE become reminders HERE
+      within a minute: notification and voice, repeating every 5 minutes for an hour.
+      This is the fast direction — your service updates its own calendar instantly,
+      and CHKT checks it every 60 seconds, instead of waiting for the service to
+      push outwards on its own schedule.</p>
+    <form method="post">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <input type="hidden" name="section" value="follow">
+      <label class="check-row">
+        <input class="w-auto" type="checkbox" name="remote_cal_enabled" {% if follow.enabled %}checked{% endif %}>
+        Follow this calendar
+      </label>
+      <label for="s-fw-url">Calendar address (CalDAV URL of one calendar)</label>
+      <input id="s-fw-url" type="text" name="remote_cal_url" value="{{ follow.url }}"
+             placeholder="https://caldav.fastmail.com/dav/calendars/user/you@example.com/…/"
+             autocapitalize="off" spellcheck="false">
+      <div class="row">
+        <div>
+          <label for="s-fw-user">Username</label>
+          <input id="s-fw-user" type="text" name="remote_cal_user" value="{{ follow.username }}"
+                 autocapitalize="off" spellcheck="false">
+        </div>
+        <div>
+          <label for="s-fw-pass">App password{% if follow.password_set %} (saved, leave blank to keep){% endif %}</label>
+          <input id="s-fw-pass" type="password" name="remote_cal_password" value="">
+        </div>
+      </div>
+      <p class="hint">Status: {{ follow.status }}</p>
+      <p class="hint">Fastmail: Settings → Privacy &amp; Security → New app password
+        (Calendars), and the calendar's CalDAV URL is under Settings → Calendars →
+        that calendar → CalDAV. Use a calendar you create events in — CHKT's own
+        subscribed calendar stays separate, so nothing shows up twice. Deleting the
+        event there removes the reminder here; answering the reminder here doesn't
+        touch the event there.</p>
+      <p class="tight"><button class="btn-primary" type="submit">Save and check now</button></p>
+    </form>
+  </section>
+
+  <section class="panel">
     <h2>Two-factor sign-in</h2>
     {% if totp_enabled %}
       <p>✓ 2FA is on. Signing in asks for a code from your authenticator app.</p>

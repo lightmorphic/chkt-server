@@ -4,7 +4,7 @@ from datetime import timedelta
 from flask import Flask, request
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-from . import api, auth, backup, caldav, db, pushsvc, views
+from . import api, auth, backup, caldav, db, pushsvc, remote_cal, views
 
 
 def create_app():
@@ -47,6 +47,7 @@ def create_app():
     db.init_db()
     pushsvc.ensure_vapid_keys()
     pushsvc.start_engine()
+    remote_cal.start_follower()
     backup.start_daily_backups()
 
     app.register_blueprint(auth.bp)

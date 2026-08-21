@@ -113,7 +113,11 @@ def _on_calendar(reminder, tag: str) -> bool:
     """A location-only reminder has no moment to draw, and with a tag set,
     only reminders wearing it belong on the calendar. Case-insensitive: the
     tag typed in Settings and the one typed on a reminder rarely match on
-    capitals."""
+    capitals. Reminders FOLLOWED from a remote calendar never publish:
+    handing a calendar service copies of its own events back would double
+    every one of them in that calendar's view."""
+    if reminder["id"].startswith("fw-"):
+        return False
     if not reminder.get("due_at"):
         return False
     if not tag:

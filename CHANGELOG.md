@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.1.27]
+
+### Added
+- **Follow a calendar.** Point CHKT at a calendar on your calendar
+  service — Fastmail, iCloud, Nextcloud, anything CalDAV — and events you
+  create there become reminders here within a minute, with the can't-miss
+  defaults: notification and voice, repeating every 5 minutes for an
+  hour. This is the fast direction: your service updates its own calendar
+  the instant you save, and CHKT checks it every 60 seconds, instead of
+  waiting for the service to push outwards on whatever schedule it
+  fancies (measured in many minutes for some). Edits there follow here;
+  deleting the event removes the reminder; answering or snoozing here
+  doesn't touch the event there. Followed reminders are never republished
+  onto CHKT's own calendar, so nothing shows up twice. Configure it under
+  Settings → Follow a calendar; Save doubles as a connection test.
+
 ## [1.1.26]
 
 ### Changed
