@@ -26,6 +26,9 @@
   {% if known_tags %}
   <p class="hint">Existing tags: {% for t in known_tags %}#{{ t }} {% endfor %}</p>
   {% endif %}
+  {% if calendar_tag %}
+  <p class="hint">Tag a reminder <strong>#{{ calendar_tag }}</strong> to put it on your calendar.</p>
+  {% endif %}
 
   <label for="f-due">When</label>
   <input id="f-due" type="datetime-local" name="due" value="{{ due_local }}">

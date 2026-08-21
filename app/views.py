@@ -94,9 +94,10 @@ def reminder_edit(reminder_id=None):
             due_local = f"{today}T{due_time}"
     return render_template(
         "edit_reminder.html",
-        reminder=reminder, known_tags=store.all_tags(),
+        reminder=reminder, known_tags=_tag_suggestions(),
         alert_modes=ALERT_MODES, csrf=csrf_token(), reuse=reuse,
         preset_tag=request.args.get("tag", ""),
+        calendar_tag=setting("calendar_tag", "").strip(),
         due_local=due_local,
     )
 
@@ -398,6 +399,18 @@ def _duration_minutes(form):
         return max(0, min(int(raw), 9999))
     except ValueError:
         return 0
+
+
+def _tag_suggestions():
+    """Tags already in use, plus the calendar tag even when nothing wears it
+    yet. Otherwise there's a chicken and egg: the tag that decides what
+    reaches your calendar is the one tag the list can never suggest, because
+    suggestions come from reminders that already have it."""
+    tags = store.all_tags()
+    calendar_tag = setting("calendar_tag", "").strip()
+    if calendar_tag and calendar_tag.casefold() not in [t.casefold() for t in tags]:
+        tags = sorted(tags + [calendar_tag])
+    return tags
 
 
 def _reminder_from_form(form, existing):

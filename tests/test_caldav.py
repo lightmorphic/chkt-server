@@ -2,6 +2,7 @@
 app coming back as reminders with CHKT's defaults."""
 import base64
 import os
+import re
 import tempfile
 import unittest
 
@@ -276,6 +277,43 @@ class CalendarTagTest(unittest.TestCase):
         # one, so the calendar app drops its copy.
         self.assertIn("untagged.ics", body)
         self.assertIn("404 Not Found", body)
+
+
+class TagSuggestionTest(unittest.TestCase):
+    """The calendar tag is offered on the edit page before anything wears
+    it — otherwise it's the one tag the suggestions can never show you."""
+
+    @classmethod
+    def setUpClass(cls):
+        os.environ["CHKT_DB"] = os.path.join(_tmp, "test.db")
+        cls.app = create_app()
+        cls.client = cls.app.test_client()
+        setup = cls.client.get("/setup").get_data(as_text=True)
+        match = re.search(r'name="csrf" value="([^"]+)"', setup)
+        if match:
+            cls.client.post("/setup", data={
+                "csrf": match.group(1), "username": "devtest",
+                "password": "local-dev-smoke-test-1", "confirm": "local-dev-smoke-test-1"})
+        else:
+            login = cls.client.get("/login").get_data(as_text=True)
+            cls.client.post("/login", data={
+                "csrf": re.search(r'name="csrf" value="([^"]+)"', login).group(1),
+                "username": "devtest", "password": "local-dev-smoke-test-1"})
+
+    @classmethod
+    def tearDownClass(cls):
+        setting_put("calendar_tag", "")
+
+    def test_calendar_tag_is_suggested_even_when_unused(self):
+        setting_put("calendar_tag", "cal")
+        page = self.client.get("/reminder/new").get_data(as_text=True)
+        self.assertIn("#cal", page)
+        self.assertIn("put it on your calendar", page)
+
+    def test_nothing_extra_when_no_tag_is_set(self):
+        setting_put("calendar_tag", "")
+        page = self.client.get("/reminder/new").get_data(as_text=True)
+        self.assertNotIn("put it on your calendar", page)
 
 
 class ForwardedSchemeTest(unittest.TestCase):

@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.1.19]
+
+### Added
+- The calendar tag is always offered when editing a reminder, whether or
+  not anything wears it yet, and the page says plainly what it does:
+  "Tag a reminder #cal to put it on your calendar." Suggestions otherwise
+  come only from tags already in use, which made the one tag that decides
+  what reaches your calendar the one tag nothing could suggest. The phone
+  app picks it up by itself once a single reminder has it and syncs.
+
 ## [1.1.18]
 
 ### Added
