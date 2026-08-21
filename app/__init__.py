@@ -25,6 +25,14 @@ def create_app():
 
     from datetime import datetime
 
+    @app.context_processor
+    def _inject_version():
+        # Every page can show which version is running (the corner badge in
+        # base.html) without each view having to pass it along.
+        from .update_check import VERSION
+        return {"server_version": VERSION,
+                "project_url": "https://github.com/lightmorphic/chkt-server"}
+
     @app.template_filter("datetimeformat")
     def datetimeformat(epoch_seconds):
         return datetime.fromtimestamp(int(epoch_seconds)).strftime("%d %b %Y, %H:%M")

@@ -107,6 +107,15 @@ input, select, textarea {
 textarea { min-height: 6rem; }
 .hint { font-size: 0.8125rem; color: var(--muted-fg); margin: 0.25rem 0 0; }
 
+/* The version badge: quiet corner label, a link to the project's releases. */
+.version-badge {
+  position: fixed; right: 0.75rem; bottom: 0.75rem; z-index: 5;
+  font-size: 0.75rem; color: var(--muted-fg); text-decoration: none;
+  background: var(--panel); border: 1px solid var(--panel-border);
+  border-radius: 999px; padding: 0.2rem 0.65rem; box-shadow: var(--shadow-panel);
+}
+.version-badge:hover { color: var(--fg); border-color: var(--muted-fg); }
+
 /* Tag chips and their autocomplete. */
 .tag-chips { display: flex; flex-wrap: wrap; gap: 0.375rem; }
 .tag-chips:not(:empty) { margin-bottom: 0.5rem; }

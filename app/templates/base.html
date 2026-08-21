@@ -36,6 +36,11 @@
   {% block content %}{% endblock %}
 </main>
 
+{% if session.get('user') %}
+<a class="version-badge" href="{{ project_url }}" target="_blank" rel="noopener"
+   title="CHKT Server {{ server_version }} — releases and changelog">v{{ server_version }}</a>
+{% endif %}
+
 <div id="alert-overlay" role="alertdialog" aria-modal="true" aria-labelledby="alert-title">
   <div class="panel">
     <p class="hint">Reminder</p>

@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.21]
+
+### Added
+- A version badge in the bottom-right corner of every page, so you can see
+  what the server is running without going to Settings. Clicking it opens
+  the project's page on GitHub, where the releases and changelog live.
+  Signed-in pages only — the login screen doesn't advertise the version.
+
 ## [1.1.20]
 
 ### Changed
