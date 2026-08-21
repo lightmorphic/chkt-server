@@ -279,6 +279,80 @@ class CalendarTagTest(unittest.TestCase):
         self.assertIn("404 Not Found", body)
 
 
+class SettingsGenerationTest(unittest.TestCase):
+    """Changing WHICH reminders are published must look like a change to
+    subscribed clients, even though no reminder row changed — otherwise they
+    keep their stale copies forever (seen in the wild as untagged events
+    lingering on future days after the tag filter was switched on)."""
+
+    @classmethod
+    def setUpClass(cls):
+        os.environ["CHKT_DB"] = os.path.join(_tmp, "test.db")
+        cls.app = create_app()
+        cls.client = cls.app.test_client()
+        cls.key = new_access_key("gen-test")
+        cls.auth = {"Authorization": "Basic " + base64.b64encode(
+            f"chkt:{cls.key}".encode()).decode()}
+        store.upsert_reminder(_reminder("gen-a", "Tagged one", 1_900_000_600_000, tags="cal"))
+        store.upsert_reminder(_reminder("gen-b", "Untagged one", 1_900_000_700_000))
+
+    @classmethod
+    def tearDownClass(cls):
+        setting_put("calendar_tag", "")
+
+    def _dav(self, path, method, body="", **headers):
+        head = dict(self.auth)
+        head.update(headers)
+        return self.client.open(path, method=method, data=body, headers=head)
+
+    def _ctag(self):
+        body = self._dav(CAL, "PROPFIND", "", Depth="0").get_data(as_text=True)
+        return re.search(r"getctag>([^<]+)<", body).group(1)
+
+    def test_01_changing_the_tag_changes_the_ctag(self):
+        from app import caldav
+        setting_put("calendar_tag", "")
+        setting_put("calendar_gen", "0")
+        before = self._ctag()
+        token_before = caldav._sync_token()
+
+        # Save the setting the way the UI does — through the settings view is
+        # covered elsewhere; here we bump as it does.
+        setting_put("calendar_tag", "cal")
+        setting_put("calendar_gen", "1")
+        self.assertNotEqual(before, self._ctag())
+        self.assertNotEqual(token_before, caldav._sync_token())
+
+    def test_02_a_token_from_before_the_change_is_refused(self):
+        setting_put("calendar_tag", "cal")
+        setting_put("calendar_gen", "1")
+        stale = ('<?xml version="1.0"?><D:sync-collection xmlns:D="DAV:">'
+                 "<D:sync-token>http://chkt.lightmorphic/ns/sync/0-5</D:sync-token>"
+                 "<D:prop><D:getetag/></D:prop></D:sync-collection>")
+        r = self._dav(CAL, "REPORT", stale)
+        self.assertEqual(403, r.status_code)
+        self.assertIn("valid-sync-token", r.get_data(as_text=True))
+
+    def test_03_a_current_token_still_syncs_normally(self):
+        report = ('<?xml version="1.0"?><D:sync-collection xmlns:D="DAV:">'
+                  "<D:sync-token>http://chkt.lightmorphic/ns/sync/1-0</D:sync-token>"
+                  "<D:prop><D:getetag/></D:prop></D:sync-collection>")
+        r = self._dav(CAL, "REPORT", report)
+        self.assertEqual(207, r.status_code)
+        body = r.get_data(as_text=True)
+        self.assertIn("gen-a.ics", body)
+        # The untagged one is off the calendar under this filter: 404.
+        self.assertIn("gen-b.ics", body)
+        self.assertIn("404 Not Found", body)
+
+    def test_04_a_pre_generation_token_is_refused_once_settings_have_changed(self):
+        # Format from before 1.1.22 — no generation part at all.
+        old = ('<?xml version="1.0"?><D:sync-collection xmlns:D="DAV:">'
+               "<D:sync-token>http://chkt.lightmorphic/ns/sync/5</D:sync-token>"
+               "<D:prop><D:getetag/></D:prop></D:sync-collection>")
+        self.assertEqual(403, self._dav(CAL, "REPORT", old).status_code)
+
+
 class TagRulesTest(unittest.TestCase):
     """Tags are lowercase everywhere, and the calendar setting can only name
     a tag that exists — picking one nothing wears would publish an empty

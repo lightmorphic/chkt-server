@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.1.22]
+
+### Fixed
+- Switching the calendar tag filter on left already-subscribed calendar
+  apps showing the old, unfiltered set on days they had already fetched —
+  seen as "today shows only tagged reminders, future days show
+  everything". Changing the setting changes which reminders are published
+  without touching any reminder row, and the change markers clients watch
+  (ctag and sync token) were built purely from row timestamps, so
+  subscribers were told nothing had changed and kept their stale copies.
+  Both markers now carry a settings generation: saving a different tag
+  bumps it, subscribed clients see a changed calendar, re-list it in full,
+  and drop what no longer belongs. A sync token from before the change is
+  refused per RFC 6578, which tells the client to do exactly that full
+  resync.
+
 ## [1.1.21]
 
 ### Added

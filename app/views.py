@@ -187,7 +187,14 @@ def settings_page():
             chosen = store.normalize_tags(request.form.get("calendar_tag") or "")
             # Only a tag that exists: choosing one nothing wears would
             # publish an empty calendar and look like a broken feature.
-            setting_put("calendar_tag", chosen if chosen in store.all_tags() else "")
+            chosen = chosen if chosen in store.all_tags() else ""
+            if chosen != setting("calendar_tag", ""):
+                # Which reminders are published just changed without any
+                # reminder row changing; bump the generation so subscribed
+                # calendars re-list and drop what no longer belongs.
+                gen = setting("calendar_gen", "0")
+                setting_put("calendar_gen", str((int(gen) if gen.isdigit() else 0) + 1))
+            setting_put("calendar_tag", chosen)
             message = "Calendar settings saved."
     from .update_check import VERSION, available_update
     from .settings_store import quiet_hours

@@ -130,15 +130,34 @@ def _href(reminder) -> str:
     return CALENDAR_PATH + reminder["id"] + ".ics"
 
 
+def _settings_gen() -> int:
+    """Bumped whenever the calendar settings change. The sync token and ctag
+    carry it, because changing WHICH reminders are published changes the
+    calendar without touching any reminder row — and a client comparing
+    tokens built only from row timestamps would be told, wrongly, that
+    nothing happened, and keep showing its stale copies forever."""
+    raw = setting_get("calendar_gen", "0").strip()
+    return int(raw) if raw.isdigit() else 0
+
+
 def _sync_token() -> str:
     rows = store.reminders(include_deleted=True)
     latest = max((r.get("updated_at") or 0 for r in rows), default=0)
-    return "http://chkt.lightmorphic/ns/sync/%d" % latest
+    return "http://chkt.lightmorphic/ns/sync/%d-%d" % (_settings_gen(), latest)
 
 
-def _token_value(token: str) -> int:
+def _token_value(token: str):
+    """(generation, since) from a client's token; None when unreadable.
+    Tokens from before generations existed parse as generation 0."""
     tail = (token or "").rsplit("/", 1)[-1]
-    return int(tail) if tail.isdigit() else 0
+    if not tail:
+        return (None, 0)
+    gen, dash, since = tail.partition("-")
+    if not dash:
+        return (0, int(gen)) if gen.isdigit() else None
+    if gen.isdigit() and since.isdigit():
+        return (int(gen), int(since))
+    return None
 
 
 # ---- XML plumbing ----
@@ -356,7 +375,16 @@ def _sync_report(root, requested, wants_data):
     """Incremental sync: what changed since the client's token. Deletions
     come back as 404 responses, which is how a client learns to drop them."""
     token_el = root.find("{DAV:}sync-token")
-    since = _token_value(token_el.text if token_el is not None else "")
+    parsed = _token_value(token_el.text if token_el is not None else "")
+    if parsed is None or (parsed[0] is not None and parsed[0] != _settings_gen()):
+        # The settings changed since this token was minted, so "what changed"
+        # can't be answered from row timestamps — reminders left the calendar
+        # without any row changing. RFC 6578's answer: refuse the token and
+        # the client does a full resync, dropping whatever we no longer list.
+        body = ('<?xml version="1.0" encoding="utf-8"?>'
+                '<D:error xmlns:D="DAV:"><D:valid-sync-token/></D:error>')
+        return Response(body, 403, {"Content-Type": "application/xml; charset=utf-8"})
+    since = parsed[1]
     changed = store.changed_since(since)["reminders"]
 
     tag = _calendar_tag()
