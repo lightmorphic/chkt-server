@@ -239,6 +239,8 @@ header.top nav a:hover { color: var(--chalk); }
 /* ---- Install ---- */
 .install-grid { display: grid; gap: 1.5rem; margin-top: 2rem; }
 @media (min-width: 900px) { .install-grid { grid-template-columns: 1.15fr 1fr; align-items: start; } }
+.under-code { margin-top: 0.85rem; font-size: 0.88rem; color: var(--dim); }
+.under-code code { background: rgba(255,255,255,0.07); border-radius: 0.3rem; padding: 0.05rem 0.3rem; font-size: 0.85em; }
 pre { margin: 0; background: #05070F; border: 1px solid var(--line); border-radius: var(--radius); padding: 1rem 1.1rem; overflow-x: auto; font-size: 0.85rem; line-height: 1.75; }
 pre code { color: var(--chalk); font-family: ui-monospace, Consolas, monospace; }
 pre .c { color: var(--dim); }
@@ -468,10 +470,24 @@ footer .fine { color: var(--dim); font-size: 0.78rem; margin-top: 1.25rem; max-w
     <h2>Your server. One command. No account with anyone.</h2>
     <div class="install-grid">
       <div>
-        <pre><code><span class="c"># pulls a prebuilt image, nothing to compile</span>
-git clone https://github.com/lightmorphic/chkt-server
-cd chkt-server
-docker compose up -d</code></pre>
+        <pre><code><span class="c">services:</span>
+  chkt:
+    image: ghcr.io/lightmorphic/chkt-server:latest
+    container_name: chkt-server
+    restart: unless-stopped
+    ports:
+      - "8321:8321"
+    volumes:
+      - ./data:/data
+    environment:
+      - TZ=Europe/London
+      <span class="c"># set this to 1 while you reach it over plain http</span>
+      - CHKT_INSECURE_COOKIES=1
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL</code></pre>
+        <p class="under-code">Paste that into Dockge, Portainer or a <code>compose.yaml</code> of your own and start it. It pulls a prebuilt image for amd64 and arm64, so nothing compiles on your machine.</p>
         <div class="trust">
           <div><b>Runs anywhere Docker does</b><span>amd64 and arm64, so a Raspberry Pi is fine.</span></div>
           <div><b>Encrypted at rest</b><span>Every credential you enter is encrypted with your server's own key.</span></div>
@@ -480,7 +496,7 @@ docker compose up -d</code></pre>
       <div>
         <ol class="steps">
           <li><span><b>Install the app</b> from the releases page on GitHub. It works completely offline, so the server is optional.</span></li>
-          <li><span><b>Start the server</b> with the command on the left. It generates its own secret key, so there's no config file to write.</span></li>
+          <li><span><b>Start the server</b> with the stack on the left. It generates its own secret key on first run, so there's no config file to write.</span></li>
           <li><span><b>Pair them:</b> create an access key on the Devices page, enter your server address in the app, then press Test connection.</span></li>
           <li><span><b>Subscribe your calendar</b>, if you want reminders showing up in Fastmail, Thunderbird or DAVx⁵.</span></li>
         </ol>

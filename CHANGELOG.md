@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.1.31]
+
+### Changed
+- The install block on chkt.org is the compose stack itself, ready to
+  paste into Dockge, Portainer or a compose.yaml of your own, instead of
+  a git clone that nobody running a stack manager wants. Values match the
+  shipped docker-compose.yml exactly: same image, port, data mount and
+  hardening.
+
 ## [1.1.30]
 
 ### Fixed
