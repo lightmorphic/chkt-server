@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CHKT Server — talking reminders, self-hosted</title>
-<meta name="description" content="The self-hosted browser companion to CHKT: every feature of the Android app, in your own Docker container, synced with your phone.">
+<title>CHKT — reminders that say themselves out loud</title>
+<meta name="description" content="A talking reminders app for Android with a self-hosted server. A sound, then your reminder spoken aloud, repeated until you answer. No accounts, no tracking, no Google services.">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
-<meta name="theme-color" content="#FBC711">
+<meta name="theme-color" content="#0A0F1E">
 <style>
 @font-face {
   font-family: "Manrope";
@@ -16,530 +16,660 @@
 }
 
 :root {
-  color-scheme: light dark;
-  --bg: #ffffff;  --fg: #09090b;
-  --panel: #ffffff;  --panel-border: rgba(24, 24, 40, 0.10);
-  --border: #e4e4e7;  --muted: #f4f4f5;  --muted-fg: #71717a;
-  --shadow-panel: 0 1px 2px rgba(24,24,40,.05), 0 8px 24px -16px rgba(24,24,40,.18);
-  --accent: #fbc711;  --accent-hover: #ddaf0f;  --on-accent: #645007;
-  --accent-container: #fff8e2;  --on-accent-container: #5f4c06;
-  --brand-navy: #111827;
-  --link: #1b74bc;
-  --radius: 0.875rem;
-  --panel-radius: 1.375rem;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #09090b;  --fg: #fafafa;
-    --panel: #1b1d29;  --panel-border: rgba(255,255,255,.09);
-    --border: #27272a;  --muted: #1c1c1f;  --muted-fg: #a1a1aa;
-    --shadow-panel: 0 1px 2px rgba(0,0,0,.35), 0 8px 24px -16px rgba(0,0,0,.6);
-    --accent-container: #4b3c05;  --on-accent-container: #fde694;
-    --link: #2295f1;
-  }
-}
-:root[data-theme="dark"] {
-  --bg: #09090b;  --fg: #fafafa;
-  --panel: #1b1d29;  --panel-border: rgba(255,255,255,.09);
-  --border: #27272a;  --muted: #1c1c1f;  --muted-fg: #a1a1aa;
-  --shadow-panel: 0 1px 2px rgba(0,0,0,.35), 0 8px 24px -16px rgba(0,0,0,.6);
-  --accent-container: #4b3c05;  --on-accent-container: #fde694;
-  --link: #2295f1;
-}
-:root[data-theme="light"] {
-  --bg: #ffffff;  --fg: #09090b;
-  --panel: #ffffff;  --panel-border: rgba(24, 24, 40, 0.10);
-  --border: #e4e4e7;  --muted: #f4f4f5;  --muted-fg: #71717a;
-  --shadow-panel: 0 1px 2px rgba(24,24,40,.05), 0 8px 24px -16px rgba(24,24,40,.18);
-  --accent-container: #fff8e2;  --on-accent-container: #5f4c06;
-  --link: #1b74bc;
+  color-scheme: dark;
+  --ink: #0A0F1E;
+  --panel: #121A30;
+  --panel-2: #18213C;
+  --line: rgba(255, 255, 255, 0.10);
+  --line-strong: rgba(255, 255, 255, 0.18);
+  --chalk: #EEF1F8;
+  --dim: #94A0BC;
+  --volt: #FBC711;
+  --volt-ink: #2A2100;
+  --radius: 0.75rem;
+  --radius-lg: 1.5rem;
+  --shell: 74rem;
 }
 
 * { box-sizing: border-box; }
-html { overflow-x: hidden; }
+html { overflow-x: hidden; scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}
+
 body {
   margin: 0;
+  background: var(--ink);
+  color: var(--chalk);
   font-family: "Manrope", system-ui, sans-serif;
-  background: var(--bg);
-  color: var(--fg);
+  font-weight: 400;
   line-height: 1.6;
-  overflow-x: hidden;
-}
-main { max-width: 68rem; margin: 0 auto; padding: 0 1.25rem; }
-section { padding: 3.5rem 0; }
-h1, h2, h3 { line-height: 1.15; letter-spacing: -0.02em; margin: 0 0 0.75rem; }
-h1 { font-size: clamp(2rem, 5vw, 3rem); font-weight: 700; }
-h2 { font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 700; letter-spacing: -0.01em; }
-h3 { font-size: 1.0625rem; font-weight: 600; margin-bottom: 0.4rem; }
-p { max-width: 62ch; }
-a { color: var(--link); }
-code, pre { font-family: ui-monospace, "SF Mono", Consolas, monospace; }
-
-.panel {
-  background: var(--panel);
-  border: 1px solid var(--panel-border);
-  border-radius: var(--panel-radius);
-  box-shadow: var(--shadow-panel);
+  -webkit-font-smoothing: antialiased;
 }
 
-header.top {
-  display: flex; align-items: center; gap: 0.75rem;
-  max-width: 68rem; margin: 0 auto; padding: 1.25rem 1.25rem 0;
+.shell { width: 100%; max-width: var(--shell); margin: 0 auto; padding: 0 1.5rem; }
+/* Grid children default to min-width:auto, so anything with wide content —
+   the install code block especially — refuses to shrink and pushes the
+   whole page sideways on a phone. */
+.hero-grid > *, .install-grid > *, .bento > *, .trust > *, .spec > * { min-width: 0; }
+pre { max-width: 100%; }
+section { padding: clamp(3rem, 7vw, 5.5rem) 0; }
+
+h1, h2, h3 { margin: 0; line-height: 1.05; letter-spacing: -0.035em; font-weight: 800; }
+h1 { font-size: clamp(2.6rem, 6.4vw, 4.5rem); letter-spacing: -0.045em; }
+h2 { font-size: clamp(1.65rem, 3.4vw, 2.4rem); }
+h3 { font-size: 1.0625rem; letter-spacing: -0.02em; }
+p { margin: 0; }
+a { color: var(--volt); }
+
+/* The utility face: small, wide, monospace. Used only for data and labels —
+   timings, counts, section markers — never for prose. */
+.mono {
+  font-family: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--volt);
+  font-weight: 500;
 }
-header.top .logo { display: flex; align-items: center; gap: 0.6rem; font-weight: 700; font-size: 1.25rem; text-decoration: none; color: var(--fg); }
-header.top .logo svg { display: block; border-radius: 6px; }
-header.top nav { margin-left: auto; display: flex; gap: 1.5rem; align-items: center; }
-header.top nav a { text-decoration: none; color: var(--muted-fg); font-weight: 600; font-size: 0.9375rem; }
-header.top nav a:hover { color: var(--fg); }
 
 .btn {
-  display: inline-flex; align-items: center; gap: 0.5rem;
-  font: inherit; font-weight: 600; font-size: 0.9375rem;
-  border: 1px solid var(--border);
-  background: var(--muted); color: var(--fg);
-  border-radius: var(--radius);
-  padding: 0.7rem 1.25rem;
-  text-decoration: none;
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  font: inherit; font-weight: 700; font-size: 0.9375rem;
+  border: 1px solid var(--line-strong); background: transparent; color: var(--chalk);
+  border-radius: 999px; padding: 0.72rem 1.4rem; text-decoration: none; cursor: pointer;
+  transition: background 0.18s, border-color 0.18s, transform 0.18s;
 }
-.btn-primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
-.btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+.btn:hover { background: rgba(255,255,255,0.06); border-color: var(--chalk); }
+.btn:active { transform: translateY(1px); }
+.btn-volt { background: var(--volt); border-color: var(--volt); color: var(--volt-ink); }
+.btn-volt:hover { background: #ffd643; border-color: #ffd643; }
+.btn[disabled] { opacity: 0.5; cursor: default; }
+:where(a, button, input, [tabindex]):focus-visible { outline: 2px solid var(--volt); outline-offset: 3px; }
 
-.hero { padding-top: 2.5rem; padding-bottom: 2.5rem; }
-.hero p.lede { font-size: 1.125rem; color: var(--muted-fg); max-width: 46ch; }
-.hero .ctas { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1.5rem; }
-.badge-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1.25rem; }
-.badge {
-  font-size: 0.8125rem; font-weight: 600; color: var(--muted-fg);
-  border: 1px solid var(--border); border-radius: 999px; padding: 0.25rem 0.75rem;
+/* ---- Header ---- */
+header.top { padding-top: 1.5rem; }
+header.top .row { display: flex; align-items: center; gap: 1rem; }
+.logo { display: flex; align-items: center; gap: 0.6rem; font-weight: 800; font-size: 1.15rem; letter-spacing: -0.03em; color: var(--chalk); text-decoration: none; }
+header.top nav { margin-left: auto; display: flex; gap: 1.6rem; align-items: center; }
+header.top nav a { color: var(--dim); text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+header.top nav a:hover { color: var(--chalk); }
+@media (max-width: 640px) { header.top nav a.hide-sm { display: none; } }
+
+/* ---- Hero: two columns that both carry weight ---- */
+.hero { padding-top: clamp(2.5rem, 5vw, 4rem); }
+.hero-grid { display: grid; gap: clamp(2rem, 4vw, 3.5rem); align-items: start; }
+@media (min-width: 940px) { .hero-grid { grid-template-columns: minmax(0, 1fr) 20rem; } }
+
+.hero h1 { margin-top: 0.9rem; }
+.hero h1 .thin { display: block; font-weight: 200; color: var(--dim); }
+.hero .lede { margin-top: 1.25rem; font-size: 1.125rem; color: var(--dim); max-width: 44ch; }
+.hero .ctas { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1.75rem; }
+
+/* The control desk: the visitor's half of the demo. */
+.desk { margin-top: 2.5rem; border: 1px solid var(--line); background: var(--panel); border-radius: var(--radius-lg); padding: 1.25rem; }
+.desk-head { display: flex; align-items: baseline; gap: 0.75rem; flex-wrap: wrap; }
+.desk-head .hint { font-size: 0.8rem; color: var(--dim); margin-left: auto; }
+.field { margin-top: 0.9rem; }
+.field label { display: block; font-size: 0.8rem; color: var(--dim); margin-bottom: 0.4rem; font-weight: 600; }
+.field input {
+  width: 100%; font: inherit; font-size: 1rem; color: var(--chalk);
+  background: var(--ink); border: 1px solid var(--line-strong); border-radius: var(--radius);
+  padding: 0.7rem 0.9rem;
 }
-
-/* Flow diagram: three plain boxes, no images */
-.flow { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-top: 2.5rem; }
-.flow .node {
-  flex: 1; min-width: 12rem; padding: 1.25rem;
-  text-align: center; font-weight: 600;
+.modes { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.9rem; }
+.mode {
+  font: inherit; font-size: 0.82rem; font-weight: 600; cursor: pointer;
+  background: transparent; color: var(--dim);
+  border: 1px solid var(--line-strong); border-radius: 999px; padding: 0.35rem 0.85rem;
 }
-.flow .node .sub { font-weight: 400; font-size: 0.8125rem; color: var(--muted-fg); margin-top: 0.25rem; }
-.flow .arrow { color: var(--muted-fg); font-size: 1.5rem; flex: 0 0 auto; }
-@media (max-width: 720px) { .flow .arrow { transform: rotate(90deg); } }
+.mode[aria-pressed="true"] { background: var(--volt); border-color: var(--volt); color: var(--volt-ink); }
+.desk-actions { display: flex; gap: 0.6rem; align-items: center; margin-top: 1.1rem; flex-wrap: wrap; }
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 1.25rem;
-  margin-top: 2rem;
-}
-.grid .panel { padding: 1.5rem; }
-.grid .icon {
-  width: 2.25rem; height: 2.25rem; border-radius: 0.65rem;
-  background: var(--accent-container); color: var(--on-accent-container);
-  display: flex; align-items: center; justify-content: center;
-  margin-bottom: 0.9rem;
-}
-.grid p { font-size: 0.9375rem; color: var(--muted-fg); margin: 0; }
+/* Waveform + timeline: real data, not decoration. */
+.scope { margin-top: 1.1rem; border-top: 1px solid var(--line); padding-top: 0.9rem; }
+.scope canvas { display: block; width: 100%; height: 54px; }
+.timeline { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-top: 0.65rem; }
+.step { border-top: 2px solid var(--line); padding-top: 0.45rem; transition: border-color 0.2s, color 0.2s; }
+.step .t { font-family: ui-monospace, Consolas, monospace; font-size: 0.7rem; color: var(--dim); letter-spacing: 0.08em; }
+.step .n { font-size: 0.8rem; font-weight: 700; color: var(--dim); }
+.step.on { border-color: var(--volt); }
+.step.on .n, .step.on .t { color: var(--volt); }
 
-.install .panel { padding: 2rem; }
-.install pre {
-  background: var(--muted); border: 1px solid var(--border); border-radius: var(--radius);
-  padding: 1rem 1.25rem; overflow-x: auto; font-size: 0.875rem; line-height: 1.7;
-}
-.install .steps { display: grid; gap: 1.25rem; margin-top: 1.5rem; }
-@media (min-width: 800px) { .install .steps { grid-template-columns: 1fr 1fr; } }
-
-.privacy { display: grid; gap: 1.25rem; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-top: 1.5rem; }
-.privacy .panel { padding: 1.5rem; }
-
-footer { border-top: 1px solid var(--border); padding: 2.5rem 0; margin-top: 1rem; }
-footer .row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
-footer nav { display: flex; gap: 1.5rem; flex-wrap: wrap; }
-footer nav a { text-decoration: none; font-weight: 600; font-size: 0.9375rem; }
-footer .fine { color: var(--muted-fg); font-size: 0.8125rem; margin-top: 1rem; }
-
-/* ---- Interactive demo phone ---- */
-.hero-split { display: flex; gap: 2.5rem; align-items: flex-start; flex-wrap: wrap; }
-.hero-copy { flex: 1 1 26rem; min-width: 0; }
-.demo-wrap { flex: 0 0 auto; margin: 0 auto; text-align: center; }
+/* ---- The phone ---- */
+.phone-col { display: flex; flex-direction: column; align-items: center; gap: 0.9rem; }
 .phone {
-  width: 292px; height: 596px; margin: 0 auto;
-  border-radius: 2.4rem; border: 10px solid #111827;
-  background: var(--bg); overflow: hidden; position: relative;
-  box-shadow: var(--shadow-panel);
+  width: 19rem; max-width: 100%; aspect-ratio: 9 / 18.5;
+  border: 9px solid #05070F; border-radius: 2.25rem; background: var(--panel);
+  position: relative; overflow: hidden;
+  box-shadow: 0 2rem 4rem -1.5rem rgba(0,0,0,0.8), 0 0 0 1px var(--line-strong);
 }
-.phone .screen { position: absolute; inset: 0; display: flex; flex-direction: column; transition: opacity 0.25s; }
-.phone .screen[hidden] { display: none; }
-.p-top { display: flex; align-items: center; gap: 0.5rem; padding: 0.9rem 1rem 0.5rem; font-weight: 700; }
-.p-top svg { border-radius: 5px; }
-.p-top .ver { margin-left: auto; font-size: 0.7rem; font-weight: 400; color: var(--muted-fg); }
-.p-chips { display: flex; gap: 0.4rem; padding: 0.25rem 1rem 0.5rem; flex-wrap: wrap; }
-.p-chip { font-size: 0.7rem; font-weight: 600; border: 1px solid var(--border); border-radius: 999px; padding: 0.1rem 0.6rem; color: var(--muted-fg); }
-.p-chip.on { background: var(--accent-container); color: var(--on-accent-container); border-color: transparent; }
-.p-list { padding: 0.25rem 0.9rem; display: flex; flex-direction: column; gap: 0.5rem; overflow: hidden; }
-.p-card { text-align: left; border: 1px solid var(--panel-border); border-radius: 1rem; padding: 0.6rem 0.8rem; background: var(--panel); }
-.p-card .t { font-weight: 600; font-size: 0.85rem; }
-.p-card .w { font-size: 0.72rem; color: var(--muted-fg); }
-.p-card .g { font-size: 0.68rem; color: var(--on-accent-container); }
-.p-fab {
-  position: absolute; right: 1rem; bottom: 1rem; width: 3rem; height: 3rem;
-  border-radius: 1rem; background: var(--accent); color: var(--on-accent);
-  display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 700;
-}
+.screen { position: absolute; inset: 0; display: flex; flex-direction: column; }
+.screen[hidden] { display: none; }
+
+.p-bar { display: flex; align-items: center; gap: 0.45rem; padding: 0.85rem 0.9rem 0.4rem; font-weight: 800; font-size: 0.95rem; }
+.p-bar .v { margin-left: auto; font-size: 0.65rem; font-weight: 400; color: var(--dim); }
+.p-tags { display: flex; gap: 0.3rem; padding: 0 0.9rem 0.5rem; }
+.p-tag { font-size: 0.62rem; font-weight: 700; border: 1px solid var(--line); border-radius: 999px; padding: 0.08rem 0.5rem; color: var(--dim); }
+.p-tag.on { background: rgba(251,199,17,0.14); color: var(--volt); border-color: transparent; }
+.p-items { padding: 0 0.7rem; display: flex; flex-direction: column; gap: 0.4rem; }
+.p-item { background: var(--panel-2); border: 1px solid var(--line); border-radius: 0.9rem; padding: 0.5rem 0.65rem; }
+.p-item .ti { font-size: 0.78rem; font-weight: 700; letter-spacing: -0.01em; }
+.p-item .wh { font-size: 0.66rem; color: var(--dim); }
+.p-item.live { border-color: rgba(251,199,17,0.5); box-shadow: 0 0 0 1px rgba(251,199,17,0.25); }
+.p-fab { position: absolute; right: 0.8rem; bottom: 0.8rem; width: 2.7rem; height: 2.7rem; border-radius: 0.9rem; background: var(--volt); color: var(--volt-ink); display: grid; place-items: center; font-size: 1.4rem; font-weight: 800; }
+
 .p-notif {
-  position: absolute; top: 0.6rem; left: 0.6rem; right: 0.6rem;
-  background: var(--panel); border: 1px solid var(--panel-border); border-radius: 1rem;
-  box-shadow: var(--shadow-panel); padding: 0.6rem 0.8rem; text-align: left;
-  transform: translateY(-130%); transition: transform 0.3s ease;
+  position: absolute; left: 0.5rem; right: 0.5rem; top: 0.5rem;
+  background: var(--panel-2); border: 1px solid var(--line-strong); border-radius: 1rem;
+  padding: 0.55rem 0.7rem; transform: translateY(-160%); transition: transform 0.32s cubic-bezier(.2,.9,.3,1.2);
+  box-shadow: 0 1rem 2rem -1rem rgba(0,0,0,0.9);
 }
 .p-notif.in { transform: translateY(0); }
-.p-notif .h { display: flex; gap: 0.4rem; align-items: center; font-size: 0.68rem; color: var(--muted-fg); }
-.p-notif .t { font-weight: 600; font-size: 0.82rem; margin-top: 0.15rem; }
-.p-alert { background: #FBC711; color: #111827; align-items: center; justify-content: center; text-align: center; padding: 1.5rem; }
-.p-alert .big { font-size: 1.35rem; font-weight: 700; line-height: 1.25; }
-.p-alert .done {
-  margin-top: 1.75rem; width: 100%; padding: 0.9rem; border: none; border-radius: 1rem;
-  background: #111827; color: #FBC711; font: inherit; font-size: 1.05rem; font-weight: 700; cursor: pointer;
-}
-.p-alert .sn-label { margin-top: 1.1rem; font-size: 0.8rem; opacity: 0.7; }
-.p-alert .sn-row { display: flex; gap: 0.4rem; margin-top: 0.5rem; flex-wrap: wrap; justify-content: center; }
-.p-alert .sn {
-  border: 2px solid #111827; background: transparent; color: #111827; border-radius: 999px;
-  padding: 0.3rem 0.8rem; font: inherit; font-size: 0.8rem; font-weight: 600; cursor: pointer;
-}
-.p-toast {
-  position: absolute; left: 50%; bottom: 4.5rem; transform: translateX(-50%);
-  background: #111827; color: #fafafa; font-size: 0.78rem; border-radius: 999px;
-  padding: 0.35rem 0.9rem; opacity: 0; transition: opacity 0.25s; white-space: nowrap;
-}
-.p-toast.in { opacity: 1; }
-.demo-cta { margin-top: 1rem; }
-.demo-note { font-size: 0.78rem; color: var(--muted-fg); max-width: 34ch; margin: 0.6rem auto 0; }
-@media (max-width: 900px) { .hero-split { justify-content: center; } }
+.p-notif .hd { display: flex; align-items: center; gap: 0.35rem; font-size: 0.62rem; color: var(--dim); }
+.p-notif .ti { font-size: 0.8rem; font-weight: 700; margin-top: 0.1rem; }
 
-:where(a, button):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* The alert: the app's real yellow, the page's one bright moment. */
+.p-alert { background: var(--volt); color: #111827; align-items: center; justify-content: center; text-align: center; padding: 1.4rem; }
+.p-alert .say { font-size: 1.3rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; }
+.p-alert .word { transition: opacity 0.15s; opacity: 0.42; }
+.p-alert .word.said { opacity: 1; }
+.p-alert .done { margin-top: 1.5rem; width: 100%; border: 0; border-radius: 0.9rem; background: #111827; color: var(--volt); font: inherit; font-size: 1rem; font-weight: 800; padding: 0.8rem; cursor: pointer; }
+.p-alert .lbl { margin-top: 1rem; font-size: 0.72rem; font-weight: 700; opacity: 0.65; letter-spacing: 0.1em; text-transform: uppercase; }
+.p-alert .snz { display: flex; gap: 0.35rem; justify-content: center; margin-top: 0.45rem; flex-wrap: wrap; }
+.p-alert .snz button { font: inherit; font-size: 0.75rem; font-weight: 700; border: 2px solid #111827; background: transparent; color: #111827; border-radius: 999px; padding: 0.25rem 0.7rem; cursor: pointer; }
+.p-toast { position: absolute; left: 50%; bottom: 4rem; transform: translateX(-50%); background: #05070F; border: 1px solid var(--line-strong); color: var(--chalk); font-size: 0.72rem; border-radius: 999px; padding: 0.3rem 0.85rem; opacity: 0; transition: opacity 0.22s; white-space: nowrap; }
+.p-toast.in { opacity: 1; }
+.phone-note { font-size: 0.75rem; color: var(--dim); text-align: center; max-width: 19rem; }
+.spec { width: 19rem; max-width: 100%; margin: 0.25rem 0 0; display: grid; gap: 0; }
+.spec > div { display: grid; grid-template-columns: 4.5rem 1fr; gap: 0.75rem; align-items: baseline; padding: 0.6rem 0; border-top: 1px solid var(--line); }
+.spec dt { margin: 0; }
+.spec dd { margin: 0; font-size: 0.82rem; color: var(--dim); }
+
+/* ---- Bento: dense, varied spans, no orphan rows ---- */
+.bento { display: grid; gap: 0.9rem; grid-template-columns: repeat(2, minmax(0,1fr)); margin-top: 2rem; }
+@media (min-width: 780px) { .bento { grid-template-columns: repeat(6, minmax(0,1fr)); } }
+.tile { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 1.35rem; grid-column: span 2; }
+.tile p { color: var(--dim); font-size: 0.9rem; margin-top: 0.35rem; }
+.tile .mono { display: block; margin-bottom: 0.65rem; }
+/* Tablets: the small tiles pair up rather than each taking a whole row. */
+@media (min-width: 560px) and (max-width: 779px) {
+  .tile.half { grid-column: span 1; }
+}
+@media (min-width: 780px) {
+  .tile.wide { grid-column: span 3; }
+  .tile.half { grid-column: span 2; }
+}
+.tile.feature { background: linear-gradient(160deg, var(--panel-2), var(--panel)); }
+.modes-list { list-style: none; padding: 0; margin: 0.9rem 0 0; display: grid; gap: 0.4rem; }
+.modes-list li { display: flex; align-items: baseline; gap: 0.6rem; font-size: 0.88rem; }
+.modes-list .k { font-family: ui-monospace, Consolas, monospace; font-size: 0.68rem; color: var(--volt); letter-spacing: 0.1em; min-width: 4.2rem; }
+
+/* ---- Install ---- */
+.install-grid { display: grid; gap: 1.5rem; margin-top: 2rem; }
+@media (min-width: 900px) { .install-grid { grid-template-columns: 1.15fr 1fr; align-items: start; } }
+pre { margin: 0; background: #05070F; border: 1px solid var(--line); border-radius: var(--radius); padding: 1rem 1.1rem; overflow-x: auto; font-size: 0.85rem; line-height: 1.75; }
+pre code { color: var(--chalk); font-family: ui-monospace, Consolas, monospace; }
+pre .c { color: var(--dim); }
+.steps { display: grid; gap: 0.85rem; margin: 0; padding: 0; list-style: none; counter-reset: s; }
+.steps li { display: grid; grid-template-columns: 1.6rem 1fr; gap: 0.75rem; align-items: baseline; font-size: 0.92rem; color: var(--dim); }
+.steps li::before { counter-increment: s; content: counter(s); font-family: ui-monospace, Consolas, monospace; font-size: 0.72rem; color: var(--volt); }
+.steps b { color: var(--chalk); font-weight: 700; }
+
+/* ---- Trust strip: dense row, not sparse cards ---- */
+.trust { display: grid; gap: 0.9rem; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); margin-top: 1.75rem; }
+.trust div { border-left: 2px solid var(--volt); padding-left: 0.9rem; }
+.trust b { display: block; font-size: 0.95rem; }
+.trust span { font-size: 0.85rem; color: var(--dim); }
+
+footer { border-top: 1px solid var(--line); padding: 2.5rem 0; }
+footer .row { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; align-items: center; }
+footer nav { display: flex; gap: 1.4rem; flex-wrap: wrap; }
+footer a { color: var(--dim); text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+footer a:hover { color: var(--chalk); }
+footer .fine { color: var(--dim); font-size: 0.78rem; margin-top: 1.25rem; max-width: 60ch; }
 </style>
 </head>
 <body>
 
 <header class="top">
-  <a class="logo" href="#top">
-    <svg width="28" height="28" viewBox="0 0 48 48" aria-hidden="true">
-      <rect x="2" y="2" width="44" height="44" rx="10" fill="#FBC711"/>
-      <path d="M14 25 L21 32 L34 16" stroke="#111827" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-    CHKT Server
-  </a>
-  <nav aria-label="Main">
-    <a href="#features">Features</a>
-    <a href="#install">Install</a>
-    <a href="https://github.com/lightmorphic/chkt-server">GitHub</a>
-  </nav>
+  <div class="shell row">
+    <a class="logo" href="#top">
+      <svg width="26" height="26" viewBox="0 0 48 48" aria-hidden="true">
+        <rect x="2" y="2" width="44" height="44" rx="10" fill="#FBC711"/>
+        <path d="M14 25 L21 32 L34 16" stroke="#111827" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      CHKT
+    </a>
+    <nav aria-label="Main">
+      <a class="hide-sm" href="#what">What it does</a>
+      <a class="hide-sm" href="#install">Self-host it</a>
+      <a href="https://github.com/lightmorphic/chkt">GitHub</a>
+    </nav>
+  </div>
 </header>
 
 <main id="top">
 
 <section class="hero">
-  <div class="hero-split">
-  <div class="hero-copy">
-  <h1>Reminders that talk, wherever you are.</h1>
-  <p class="lede">
-    CHKT is a talking reminders app for Android: a sound, then your
-    reminder spoken out loud, repeated until you answer. CHKT Server is
-    its self-hosted companion — every feature in your browser, two-way
-    sync, and a calendar any app can subscribe to.
-  </p>
-  <div class="ctas">
-    <a class="btn btn-primary" href="https://github.com/lightmorphic/chkt/releases/latest">Get the app</a>
-    <a class="btn" href="#install">Install the server</a>
-    <a class="btn" href="https://github.com/lightmorphic/chkt-server">GitHub</a>
-  </div>
-  <div class="badge-row">
-    <span class="badge">GPL-3.0</span>
-    <span class="badge">Docker, one command</span>
-    <span class="badge">No tracking, no accounts with us</span>
-    <span class="badge">Your data stays on your server</span>
-  </div>
-  </div>
-
-  <div class="demo-wrap">
-    <div class="phone panel" aria-label="Interactive demo of a CHKT alert">
-      <div class="screen" data-screen="list">
-        <div class="p-top">
-          <svg width="22" height="22" viewBox="0 0 48 48" aria-hidden="true"><rect x="2" y="2" width="44" height="44" rx="10" fill="#FBC711"/><path d="M14 25 L21 32 L34 16" stroke="#111827" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          CHKT <span class="ver">v1.0.25</span>
-        </div>
-        <div class="p-chips">
-          <span class="p-chip on">All</span><span class="p-chip">home</span><span class="p-chip">cal</span><span class="p-chip">errands</span>
-        </div>
-        <div class="p-list">
-          <div class="p-card"><div class="t">Take the bread out of the oven</div><div class="w">Today 17:40 · every 5 min until answered</div><div class="g">#home</div></div>
-          <div class="p-card"><div class="t">Call the dentist about Thursday</div><div class="w">Today 19:00</div><div class="g">#errands</div></div>
-          <div class="p-card"><div class="t">Acting group</div><div class="w">Tue 19:30 · weekly · 2 hrs</div><div class="g">#hobby  #cal</div></div>
-          <div class="p-card"><div class="t">Water the tomatoes</div><div class="w">Tomorrow 08:00 · daily</div><div class="g">#home  #garden</div></div>
-        </div>
-        <div class="p-fab" aria-hidden="true">+</div>
-        <div class="p-notif" data-notif>
-          <div class="h"><svg width="12" height="12" viewBox="0 0 48 48" aria-hidden="true"><rect x="2" y="2" width="44" height="44" rx="10" fill="#FBC711"/><path d="M14 25 L21 32 L34 16" stroke="#111827" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg> CHKT · now</div>
-          <div class="t">Take the bread out of the oven</div>
-        </div>
-        <div class="p-toast" data-toast></div>
+  <div class="shell hero-grid">
+    <div>
+      <span class="mono">Android · self-hosted · GPL-3.0</span>
+      <h1>It doesn't buzz.<span class="thin">It tells you.</span></h1>
+      <p class="lede">
+        CHKT plays a sound, waits for it to finish, then speaks your reminder
+        out loud — and keeps doing it until you answer. Run the server on your
+        own machine and it's on your phone, your browser, and your calendar.
+      </p>
+      <div class="ctas">
+        <a class="btn btn-volt" href="https://github.com/lightmorphic/chkt/releases/latest">Download for Android</a>
+        <a class="btn" href="#install">Self-host the server</a>
       </div>
-      <div class="screen p-alert" data-screen="alert" hidden>
-        <div class="big">Take the bread out of the oven</div>
-        <button class="done" data-done>Done</button>
-        <div class="sn-label">Snooze</div>
-        <div class="sn-row">
-          <button class="sn" data-snooze="10 min">10 min</button>
-          <button class="sn" data-snooze="30 min">30 min</button>
-          <button class="sn" data-snooze="1 hr">1 hr</button>
+
+      <div class="desk">
+        <div class="desk-head">
+          <span class="mono">Try it — your browser will speak</span>
+          <span class="hint">Sound on</span>
+        </div>
+        <div class="field">
+          <label for="say">What should it say?</label>
+          <input id="say" type="text" value="Take the bread out of the oven" maxlength="90" autocomplete="off">
+        </div>
+        <div class="modes" role="group" aria-label="Alert style">
+          <button class="mode" type="button" data-mode="both" aria-pressed="true">Notification + voice</button>
+          <button class="mode" type="button" data-mode="voice" aria-pressed="false">Voice only</button>
+          <button class="mode" type="button" data-mode="notify" aria-pressed="false">Notification only</button>
+        </div>
+        <div class="desk-actions">
+          <button class="btn btn-volt" type="button" data-play>Play the alert</button>
+          <span class="hint" style="font-size:0.8rem;color:var(--dim)" data-status aria-live="polite">Ready</span>
+        </div>
+        <div class="scope">
+          <canvas data-scope width="600" height="54" aria-hidden="true"></canvas>
+          <div class="timeline">
+            <div class="step" data-step="0"><div class="t">0.00s</div><div class="n">Sound</div></div>
+            <div class="step" data-step="1"><div class="t">0.90s</div><div class="n">Pause</div></div>
+            <div class="step" data-step="2"><div class="t">1.15s</div><div class="n">Voice</div></div>
+          </div>
         </div>
       </div>
     </div>
-    <div class="demo-cta">
-      <button class="btn btn-primary" data-demo-play>&#9654;&#xFE0E; Preview an alert</button>
-    </div>
-    <p class="demo-note">Live demo, drawn and voiced entirely in your browser: the ding is synthesized on the spot and the voice is your browser's own. Nothing is loaded from anywhere.</p>
-  </div>
-  </div>
 
-  <div class="flow">
-    <div class="panel node">
-      CHKT (Android)
-      <div class="sub">Rings, speaks, works fully offline</div>
-    </div>
-    <div class="arrow" aria-hidden="true">⇄</div>
-    <div class="panel node">
-      CHKT Server
-      <div class="sub">Your Docker container, your data</div>
-    </div>
-    <div class="arrow" aria-hidden="true">⇄</div>
-    <div class="panel node">
-      Any browser
-      <div class="sub">Installable, works offline too</div>
+    <div class="phone-col">
+      <div class="phone">
+        <div class="screen" data-screen="list">
+          <div class="p-bar">
+            <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true"><rect x="2" y="2" width="44" height="44" rx="10" fill="#FBC711"/><path d="M14 25 L21 32 L34 16" stroke="#111827" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            CHKT <span class="v">v1.0.27</span>
+          </div>
+          <div class="p-tags"><span class="p-tag on">All</span><span class="p-tag">home</span><span class="p-tag">cal</span><span class="p-tag">work</span></div>
+          <div class="p-items">
+            <div class="p-item live"><div class="ti" data-live-title>Take the bread out of the oven</div><div class="wh">In 3 minutes · every 5 min until answered</div></div>
+            <div class="p-item"><div class="ti">Acting group</div><div class="wh">Tue 19:30 · weekly · 2 hrs · #cal</div></div>
+            <div class="p-item"><div class="ti">Call the dentist</div><div class="wh">Tomorrow 09:00</div></div>
+            <div class="p-item"><div class="ti">Water the tomatoes</div><div class="wh">Tomorrow 08:00 · daily</div></div>
+          </div>
+          <div class="p-fab" aria-hidden="true">+</div>
+          <div class="p-notif" data-notif>
+            <div class="hd"><svg width="11" height="11" viewBox="0 0 48 48" aria-hidden="true"><rect x="2" y="2" width="44" height="44" rx="10" fill="#FBC711"/><path d="M14 25 L21 32 L34 16" stroke="#111827" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg> CHKT · now</div>
+            <div class="ti" data-notif-title>Take the bread out of the oven</div>
+          </div>
+          <div class="p-toast" data-toast></div>
+        </div>
+
+        <div class="screen p-alert" data-screen="alert" hidden>
+          <div class="say" data-say></div>
+          <button class="done" type="button" data-done>Done</button>
+          <div class="lbl">Snooze</div>
+          <div class="snz">
+            <button type="button" data-snooze="10 min">10 min</button>
+            <button type="button" data-snooze="30 min">30 min</button>
+            <button type="button" data-snooze="1 hr">1 hr</button>
+          </div>
+        </div>
+      </div>
+      <p class="phone-note">A working demo, not a video. The tone is generated in your browser and the voice is your device's own — the page still loads nothing from anywhere.</p>
+      <dl class="spec">
+        <div><dt class="mono">Sound</dt><dd>Any notification tone on your phone</dd></div>
+        <div><dt class="mono">Pause</dt><dd>A quarter second, so the two never overlap</dd></div>
+        <div><dt class="mono">Voice</dt><dd>Your device's own speech engine, offline</dd></div>
+      </dl>
     </div>
   </div>
 </section>
 
-<section id="features">
-  <h2>Everything the app does. Same reminders, same voice.</h2>
-  <p style="color:var(--muted-fg)">
-    Sync is optional and off by default on the phone. Turn it on and both
-    sides stay matched, edit a reminder anywhere and it catches up
-    everywhere else.
-  </p>
+<section id="what">
+  <div class="shell">
+    <span class="mono">What it does</span>
+    <h2>Built for the reminders you cannot afford to miss.</h2>
 
-  <div class="grid">
-    <div class="panel">
-      <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg></div>
-      <h3>Everything coming up, in order</h3>
-      <p>The home screen shows every reminder in time order with tag chips to filter, no folders to dig through.</p>
-    </div>
-    <div class="panel">
-      <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 6v6l4 2"/><circle cx="12" cy="12" r="9"/></svg></div>
-      <h3>Flexible repeats</h3>
-      <p>Daily, weekly on chosen days, monthly (day or last day), yearly, or any custom interval down to the minute.</p>
-    </div>
-    <div class="panel">
-      <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19 9a5 5 0 010 6"/></svg></div>
-      <h3>A sound, then the voice</h3>
-      <p>Every alert plays your chosen sound first, then speaks the reminder — never both at once. Three styles per reminder: notification + voice, voice only, or notification only.</p>
-    </div>
-    <div class="panel">
-      <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div>
-      <h3>Keeps reminding you</h3>
-      <p>Set it to re-alert every 1, 2, or 5 minutes until you answer, with an automatic stop from 15 minutes to 2 hours so it never nags forever.</p>
-    </div>
-    <div class="panel">
-      <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 9h18"/></svg></div>
-      <h3>On your calendar</h3>
-      <p>A CalDAV calendar any app can subscribe to — DAVx&#8309;, Thunderbird, Fastmail, Apple Calendar. Tag a reminder <code>cal</code> and it appears; add an event there and it becomes a reminder, both ways.</p>
-    </div>
-    <div class="panel">
-      <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h7"/></svg></div>
-      <h3>Quiet hours</h3>
-      <p>A do-not-disturb schedule for CHKT itself. Reminders still fire and appear, they just don't ring, speak, or vibrate during the window you set.</p>
-    </div>
-    <div class="panel">
-      <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 6v6l4 2"/><circle cx="12" cy="12" r="9"/></svg></div>
-      <h3>Snooze, decided in the moment</h3>
-      <p>The snooze length is chosen when the alert happens, from 10 minutes to a day, never locked in ahead of time.</p>
-    </div>
-    <div class="panel">
-      <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4"/></svg></div>
-      <h3>Add a reminder by voice</h3>
-      <p>Say "remind me at 2pm to feed the cat" and the form fills itself in. Runs entirely in your browser; nothing is sent anywhere until you save.</p>
-    </div>
-    <div class="panel">
-      <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 21s-7-4.5-7-11a7 7 0 0114 0c0 6.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></div>
-      <h3>Location reminders</h3>
-      <p>Trigger when the phone arrives at or leaves a place. Set the location from the app, or from your browser with one click.</p>
-    </div>
-    <div class="panel">
-      <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 21h8M12 18v3"/></svg></div>
-      <h3>Install it like an app</h3>
-      <p>A proper PWA, add it to your home screen or dock, with desktop push notifications so it can reach you even when the tab is closed.</p>
-    </div>
-    <div class="panel">
-      <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 8v13H3V8M1 3h22v5H1z"/><path d="M10 12h4"/></svg></div>
-      <h3>Backups</h3>
-      <p>Daily snapshots kept locally, plus a one-click zip download any time you want a copy on your own hard drive.</p>
-    </div>
-    <div class="panel">
-      <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 21h14"/></svg></div>
-      <h3>Plain-file export</h3>
-      <p>Export everything as JSON (round-trips back in) or Markdown to read. Your data is yours, in a format anyone can open.</p>
-    </div>
-    <div class="panel">
-      <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div>
-      <h3>Two-factor sign-in</h3>
-      <p>Optional TOTP with any authenticator app, on top of a scrypt-hashed password and hardened session cookies.</p>
-    </div>
-    <div class="panel">
-      <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="2" width="16" height="20" rx="2"/><circle cx="12" cy="18" r="0.5" fill="currentColor"/></svg></div>
-      <h3>Per-device access keys</h3>
-      <p>Every phone gets its own sync key from the Devices page, revoke one any time without touching the others.</p>
-    </div>
-    <div class="panel">
-      <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4v5h5M20 20v-5h-5"/><path d="M4 9a8 8 0 0113.5-4.5M20 15a8 8 0 01-13.5 4.5"/></svg></div>
-      <h3>Tells you when there's an update</h3>
-      <p>A quiet notice on the Settings page when a newer release is out on GitHub, checked at most once a day.</p>
-    </div>
-    <div class="panel">
-      <div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19V9M12 19V5M20 19v-7"/></svg></div>
-      <h3>Completion stats</h3>
-      <p>A 30-day view of what got done, missed, or snoozed, and your completion rate.</p>
+    <div class="bento">
+      <div class="tile wide feature">
+        <span class="mono">Alert styles</span>
+        <h3>Sound first, then the words</h3>
+        <p>The two never talk over each other. Pick per reminder:</p>
+        <ul class="modes-list">
+          <li><span class="k">BOTH</span><span>A sound, then your reminder spoken aloud</span></li>
+          <li><span class="k">VOICE</span><span>Just the voice, no ding in front of it</span></li>
+          <li><span class="k">NOTIFY</span><span>A sound and a banner, nothing spoken</span></li>
+        </ul>
+      </div>
+      <div class="tile wide">
+        <span class="mono">Until answered</span>
+        <h3>It doesn't give up after one go</h3>
+        <p>Re-alert every 1, 2 or 5 minutes until you press Done — with an automatic stop from 15 minutes to 2 hours, so it never nags into the night. Snooze lengths are chosen when the alert fires, not when you set it.</p>
+      </div>
+      <div class="tile half">
+        <span class="mono">Calendar</span>
+        <h3>On your calendar, both ways</h3>
+        <p>A CalDAV calendar any app can subscribe to. Tag a reminder and it appears; add an event there and it becomes a reminder.</p>
+      </div>
+      <div class="tile half">
+        <span class="mono">Repeats</span>
+        <h3>Every rhythm you actually use</h3>
+        <p>Daily, chosen weekdays, monthly by date or last day, yearly, or any interval down to the minute.</p>
+      </div>
+      <div class="tile half">
+        <span class="mono">On the phone</span>
+        <h3>Alarms that survive the OS</h3>
+        <p>Exact alarms through Doze and battery saver, full-screen over the lock screen, re-armed after a reboot.</p>
+      </div>
+      <div class="tile half">
+        <span class="mono">Speak to add</span>
+        <h3>Tap the widget, say it</h3>
+        <p>"Remind me at 2pm to feed the cat." Parsed on the phone itself — the words never leave it.</p>
+      </div>
+      <div class="tile half">
+        <span class="mono">Quiet hours</span>
+        <h3>A schedule for CHKT itself</h3>
+        <p>Overnight, reminders still arrive and still count — they just don't ring, speak or vibrate.</p>
+      </div>
+      <div class="tile half">
+        <span class="mono">Where</span>
+        <h3>Arriving, or leaving</h3>
+        <p>Location reminders through Android's own proximity services — no Play Services needed.</p>
+      </div>
     </div>
   </div>
 </section>
 
-<section id="install" class="install">
-  <div class="panel">
-    <h2 style="margin-bottom:0.5rem">One command to install</h2>
-    <p style="color:var(--muted-fg)">Requires Docker with the compose plugin. Nothing is compiled on your server, so it works on a Raspberry Pi as readily as a desktop. No configuration file needed to try it, CHKT generates and keeps its own secret key.</p>
-    <pre><code>git clone https://github.com/lightmorphic/chkt-server
+<section id="install">
+  <div class="shell">
+    <span class="mono">Self-host it</span>
+    <h2>Your server. One command. No account with anyone.</h2>
+    <div class="install-grid">
+      <div>
+        <pre><code><span class="c"># pulls a prebuilt image, nothing to compile</span>
+git clone https://github.com/lightmorphic/chkt-server
 cd chkt-server
 docker compose up -d</code></pre>
-    <p style="color:var(--muted-fg)">Open <code>http://&lt;this-machine&gt;:8321</code> and the first visit creates your account. Set your timezone, a different port, or where the data lives by copying <code>.env.example</code> to <code>.env</code>. Update later with <code>docker compose pull &amp;&amp; docker compose up -d</code>.</p>
-
-    <div class="steps">
-      <div>
-        <h3>On your own network</h3>
-        <p style="max-width:none">The command above is enough for a home network or a private network like Tailscale. Everything, email alerts, backups, quiet hours, is configured afterwards on the Settings page.</p>
+        <div class="trust">
+          <div><b>Runs anywhere Docker does</b><span>amd64 and arm64, so a Raspberry Pi is fine.</span></div>
+          <div><b>Encrypted at rest</b><span>Every credential you enter is encrypted with your server's own key.</span></div>
+        </div>
       </div>
       <div>
-        <h3>On the public internet</h3>
-        <p style="max-width:none">Add the bundled Caddy setup for a real domain with automatic HTTPS, no certificates to manage by hand. Full steps are in the <a href="https://github.com/lightmorphic/chkt-server#readme">README</a>.</p>
+        <ol class="steps">
+          <li><span><b>Install the app</b> from GitHub releases or F-Droid. It works completely offline — the server is optional.</span></li>
+          <li><span><b>Start the server</b> with the command on the left. It generates its own secret key; there's no config file to write.</span></li>
+          <li><span><b>Pair them</b> — create an access key on the Devices page, enter your server address in the app, press Test connection.</span></li>
+          <li><span><b>Subscribe your calendar</b>, if you want reminders showing up in Fastmail, Thunderbird or DAVx⁵.</span></li>
+        </ol>
       </div>
     </div>
   </div>
 </section>
 
-<section class="privacy">
-  <div class="panel">
-    <h3>Your server, your data</h3>
-    <p>Everything lives in your own SQLite database on your own machine. No account with us, nothing phones out except what you explicitly configure (email).</p>
-  </div>
-  <div class="panel">
-    <h3>Encrypted at rest</h3>
-    <p>Every credential you enter is encrypted with a key derived from your server's secret key. A stolen copy of the database alone gives up nothing.</p>
-  </div>
-  <div class="panel">
-    <h3>Free, forever</h3>
-    <p>GPL-3.0. Fork it, read it, run it unmodified, no catch.</p>
+<section>
+  <div class="shell">
+    <span class="mono">The deal</span>
+    <h2>No accounts, no tracking, no Google services.</h2>
+    <div class="trust">
+      <div><b>Your data stays yours</b><span>One SQLite file on your machine. Daily backups, plus export to plain JSON or markdown whenever you like.</span></div>
+      <div><b>Nothing phones home</b><span>The app talks to your server and nowhere else. Update checks are opt-in.</span></div>
+      <div><b>Works without Play Services</b><span>Built for de-Googled phones: any speech engine, any recognizer, no Firebase.</span></div>
+      <div><b>Free, and readable</b><span>GPL-3.0, both halves. Fork it, audit it, run it unmodified.</span></div>
+    </div>
   </div>
 </section>
 
 </main>
 
 <footer>
-  <main style="padding:0">
+  <div class="shell">
     <div class="row">
       <nav aria-label="Footer">
-        <a href="https://github.com/lightmorphic/chkt">CHKT for Android</a>
-        <a href="https://github.com/lightmorphic/chkt-server">CHKT Server on GitHub</a>
+        <a href="https://github.com/lightmorphic/chkt">App on GitHub</a>
+        <a href="https://github.com/lightmorphic/chkt-server">Server on GitHub</a>
+        <a href="https://github.com/lightmorphic/chkt/releases/latest">Latest release</a>
         <a href="https://github.com/lightmorphic/chkt-server/blob/main/LICENSE">Licence</a>
       </nav>
-      <span style="color:var(--muted-fg); font-size:0.875rem">CHKT Server</span>
+      <span style="color:var(--dim);font-size:0.85rem">A Lightmorphic side project</span>
     </div>
-    <p class="fine">GPL-3.0 licensed. Not affiliated with any app store. This page makes no requests beyond itself, no cookies, no analytics.</p>
-  </main>
+    <p class="fine">GPL-3.0. Not affiliated with any app store. This page makes no requests beyond itself: no cookies, no analytics, no fonts or scripts from anywhere else.</p>
+  </div>
 </footer>
 
 <script>
 (function () {
   "use strict";
-  var play = document.querySelector("[data-demo-play]");
-  if (!play) return;
+
+  var input = document.getElementById("say");
+  var playBtn = document.querySelector("[data-play]");
+  if (!playBtn) return;
+
   var listScreen = document.querySelector('[data-screen="list"]');
   var alertScreen = document.querySelector('[data-screen="alert"]');
   var notif = document.querySelector("[data-notif]");
+  var notifTitle = document.querySelector("[data-notif-title]");
+  var liveTitle = document.querySelector("[data-live-title]");
+  var sayBox = document.querySelector("[data-say]");
   var toast = document.querySelector("[data-toast]");
+  var status = document.querySelector("[data-status]");
+  var canvas = document.querySelector("[data-scope]");
+  var ctx2d = canvas.getContext("2d");
+  var steps = Array.prototype.slice.call(document.querySelectorAll(".step"));
+  var mode = "both";
   var running = false;
+  var calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  document.querySelectorAll(".mode").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      mode = btn.dataset.mode;
+      document.querySelectorAll(".mode").forEach(function (b) {
+        b.setAttribute("aria-pressed", String(b === btn));
+      });
+      // The timeline tells the truth about the mode you picked.
+      steps[0].style.opacity = mode === "voice" ? "0.35" : "1";
+      steps[2].style.opacity = mode === "notify" ? "0.35" : "1";
+    });
+  });
+
+  function text() {
+    return (input.value || "").trim() || "Take the bread out of the oven";
+  }
+  input.addEventListener("input", function () {
+    notifTitle.textContent = liveTitle.textContent = text();
+  });
+
+  function markStep(i) {
+    steps.forEach(function (s, n) { s.classList.toggle("on", n === i); });
+  }
+  function clearSteps() { steps.forEach(function (s) { s.classList.remove("on"); }); }
+
+  /* ---- The scope. Level data is real for the tone (an analyser on the
+     audio graph); during speech it follows the utterance's own word
+     boundary events, which is the only signal the platform gives us. ---- */
+  var level = 0, decay = 0, raf = null;
+  function paint() {
+    var w = canvas.width, h = canvas.height, mid = h / 2;
+    ctx2d.clearRect(0, 0, w, h);
+    ctx2d.strokeStyle = "rgba(255,255,255,0.10)";
+    ctx2d.beginPath(); ctx2d.moveTo(0, mid); ctx2d.lineTo(w, mid); ctx2d.stroke();
+    ctx2d.strokeStyle = "#FBC711";
+    ctx2d.lineWidth = 2;
+    ctx2d.beginPath();
+    for (var x = 0; x <= w; x += 4) {
+      var t = x / w;
+      var envelope = Math.sin(t * Math.PI);
+      var wobble = Math.sin(t * 22 + performance.now() / 90) * Math.sin(t * 7.3 + performance.now() / 260);
+      var y = mid - wobble * envelope * level * (mid - 4);
+      x === 0 ? ctx2d.moveTo(x, y) : ctx2d.lineTo(x, y);
+    }
+    ctx2d.stroke();
+    decay *= 0.92;
+    level = Math.max(level * 0.86, decay);
+    raf = requestAnimationFrame(paint);
+  }
+  function pulse(v) { decay = Math.max(decay, v); level = Math.max(level, v); }
+  function startScope() { if (!raf && !calm) raf = requestAnimationFrame(paint); }
+  function stopScope() {
+    if (raf) { cancelAnimationFrame(raf); raf = null; }
+    level = decay = 0;
+    ctx2d.clearRect(0, 0, canvas.width, canvas.height);
+    var mid = canvas.height / 2;
+    ctx2d.strokeStyle = "rgba(255,255,255,0.10)";
+    ctx2d.beginPath(); ctx2d.moveTo(0, mid); ctx2d.lineTo(canvas.width, mid); ctx2d.stroke();
+  }
 
   function ding() {
     try {
-      var ctx = new (window.AudioContext || window.webkitAudioContext)();
-      [[988, 0], [1319, 0.18]].forEach(function (note) {
-        var osc = ctx.createOscillator(), gain = ctx.createGain();
-        osc.type = "sine"; osc.frequency.value = note[0];
-        gain.gain.setValueAtTime(0.0001, ctx.currentTime + note[1]);
-        gain.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + note[1] + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + note[1] + 0.45);
-        osc.connect(gain).connect(ctx.destination);
-        osc.start(ctx.currentTime + note[1]); osc.stop(ctx.currentTime + note[1] + 0.5);
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      var ac = new AC();
+      var analyser = ac.createAnalyser();
+      analyser.fftSize = 256;
+      analyser.connect(ac.destination);
+      var data = new Uint8Array(analyser.frequencyBinCount);
+      [[988, 0], [1319, 0.17]].forEach(function (note) {
+        var osc = ac.createOscillator(), gain = ac.createGain();
+        osc.type = "sine";
+        osc.frequency.value = note[0];
+        gain.gain.setValueAtTime(0.0001, ac.currentTime + note[1]);
+        gain.gain.exponentialRampToValueAtTime(0.3, ac.currentTime + note[1] + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + note[1] + 0.5);
+        osc.connect(gain).connect(analyser);
+        osc.start(ac.currentTime + note[1]);
+        osc.stop(ac.currentTime + note[1] + 0.55);
       });
-      setTimeout(function () { ctx.close(); }, 1200);
-    } catch (e) { /* no audio available: the demo still plays silently */ }
+      var read = setInterval(function () {
+        analyser.getByteTimeDomainData(data);
+        var peak = 0;
+        for (var i = 0; i < data.length; i++) peak = Math.max(peak, Math.abs(data[i] - 128) / 128);
+        pulse(peak);
+      }, 40);
+      setTimeout(function () { clearInterval(read); ac.close(); }, 1000);
+    } catch (e) { /* no audio here: the demo still plays, silently */ }
   }
 
-  function speak() {
+  function speak(done) {
+    var words = text().split(/\s+/);
+    sayBox.innerHTML = words.map(function (w) {
+      return '<span class="word">' + w.replace(/[&<>]/g, "") + "</span>";
+    }).join(" ");
+    var spans = sayBox.querySelectorAll(".word");
+    var spoken = 0;
+    function advance() {
+      if (spoken < spans.length) spans[spoken++].classList.add("said");
+      pulse(0.55 + Math.random() * 0.35);
+    }
     try {
-      if (!window.speechSynthesis) return;
+      if (!window.speechSynthesis) throw new Error("no speech");
       speechSynthesis.cancel();
-      var line = new SpeechSynthesisUtterance("Take the bread out of the oven");
-      line.rate = 0.95;
+      var line = new SpeechSynthesisUtterance(text());
+      line.rate = 0.98;
+      line.onboundary = advance;
+      line.onend = function () {
+        spans.forEach ? spans.forEach(function (s) { s.classList.add("said"); })
+                      : Array.prototype.forEach.call(spans, function (s) { s.classList.add("said"); });
+        done();
+      };
+      line.onerror = function () { fallback(); };
       speechSynthesis.speak(line);
-    } catch (e) { /* no speech available */ }
+      // Some engines never fire onboundary; keep the readout moving anyway.
+      var tick = setInterval(function () {
+        if (!speechSynthesis.speaking) { clearInterval(tick); return; }
+        if (spoken < spans.length) advance();
+      }, 340);
+      setTimeout(function () { clearInterval(tick); }, 12000);
+    } catch (e) { fallback(); }
+
+    function fallback() {
+      // No speech engine: play the reading out visually so the sequence
+      // still makes sense, then finish.
+      var i = setInterval(function () {
+        advance();
+        if (spoken >= spans.length) { clearInterval(i); done(); }
+      }, 260);
+    }
   }
 
-  function showToast(text) {
-    toast.textContent = text;
-    toast.classList.add("in");
-    setTimeout(function () { toast.classList.remove("in"); }, 2200);
-  }
-
-  function backToList(message) {
+  function toWork(message) {
     try { speechSynthesis.cancel(); } catch (e) {}
     alertScreen.hidden = true;
     listScreen.hidden = false;
     notif.classList.remove("in");
+    clearSteps();
+    stopScope();
     running = false;
-    play.disabled = false;
-    if (message) showToast(message);
+    playBtn.disabled = false;
+    status.textContent = message || "Ready";
+    if (message) {
+      toast.textContent = message;
+      toast.classList.add("in");
+      setTimeout(function () { toast.classList.remove("in"); }, 2400);
+    }
   }
 
-  play.addEventListener("click", function () {
+  playBtn.addEventListener("click", function () {
     if (running) return;
     running = true;
-    play.disabled = true;
-    // The real order, on a real phone: notification appears with the
-    // sound, then the full-screen alert, then the voice.
+    playBtn.disabled = true;
+    startScope();
+    notifTitle.textContent = liveTitle.textContent = text();
+
+    var wantsSound = mode !== "voice";
+    var wantsVoice = mode !== "notify";
+    var soundMs = wantsSound ? 900 : 0;
+
     notif.classList.add("in");
-    ding();
+    status.textContent = wantsSound ? "Playing the sound…" : "Alerting…";
+    if (wantsSound) { markStep(0); ding(); }
+
     setTimeout(function () {
-      listScreen.hidden = true;
-      alertScreen.hidden = false;
-      speak();
-    }, 1100);
+      if (!wantsVoice) {
+        status.textContent = "Notification only — nothing spoken.";
+        setTimeout(function () { toWork("Notification shown"); }, 900);
+        return;
+      }
+      markStep(1);
+      setTimeout(function () {
+        listScreen.hidden = true;
+        alertScreen.hidden = false;
+        markStep(2);
+        status.textContent = "Speaking…";
+        speak(function () { status.textContent = "Waiting for you to answer."; });
+      }, 250);
+    }, soundMs);
   });
 
-  alertScreen.querySelector("[data-done]").addEventListener("click", function () {
-    backToList("Done \u2713");
+  document.querySelector("[data-done]").addEventListener("click", function () { toWork("Done"); });
+  document.querySelectorAll("[data-snooze]").forEach(function (b) {
+    b.addEventListener("click", function () { toWork("Snoozed " + b.dataset.snooze); });
   });
-  alertScreen.querySelectorAll("[data-snooze]").forEach(function (btn) {
-    btn.addEventListener("click", function () {
-      backToList("Snoozed " + btn.dataset.snooze);
-    });
-  });
+
+  // Size the canvas to its box so the trace isn't stretched.
+  function fit() {
+    var rect = canvas.getBoundingClientRect();
+    canvas.width = Math.max(320, Math.round(rect.width));
+    canvas.height = 54;
+    if (!raf) stopScope();
+  }
+  window.addEventListener("resize", fit);
+  fit();
 })();
 </script>
+
 </body>
 </html>

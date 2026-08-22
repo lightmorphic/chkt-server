@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.1.29]
+
+### Changed
+- chkt.org redesigned. The old page was a light marketing template with a
+  bolted-on demo and too much air; this one is built around the product's
+  most recognisable image — a bright yellow alert glowing in a dark room —
+  so the page is dark with brand yellow as its only accent. The demo is
+  now the whole hero and genuinely interactive: type what you want to be
+  told, pick any of the three real alert styles, and the page performs the
+  actual sequence with a live trace, a timeline of true timings, and
+  working Done and Snooze. Alert style changes the demo the way it changes
+  the app — voice only skips the tone, notification only never speaks.
+  Features moved from twelve sparse cards to a packed grid, and the
+  emptiness is gone: every row fills 97-100% of its width at phone,
+  tablet and desktop. Still one file, still no request to anywhere.
+
 ## [1.1.28]
 
 ### Changed
