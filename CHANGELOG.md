@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.1.32]
+
+### Changed
+- The line above the headline on chkt.org has moved below the buttons.
+  Whatever it contained, sitting above an h1 made it eyebrow text, which
+  the site had just finished removing everywhere else. In its new place
+  it qualifies the download it sits under, and says something more
+  useful while it's there: the Android version floor is real (8.0), and
+  "server optional" answers a question the old wording didn't.
+
 ## [1.1.31]
 
 ### Changed
