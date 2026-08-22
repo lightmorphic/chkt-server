@@ -1,0 +1,6 @@
+# Everything here is public. Crawlers and answer engines are all welcome,
+# including the AI ones: being quotable is the point of the FAQ.
+User-agent: *
+Allow: /
+
+Sitemap: https://chkt.org/sitemap.xml

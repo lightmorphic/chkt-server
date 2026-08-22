@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.1.30]
+
+### Fixed
+- chkt.org told people to install the app from F-Droid. It isn't on
+  F-Droid (their API returns 404 for the package), so that instruction is
+  gone and the install step points at the GitHub releases page.
+- Two other claims on the site overstated what CHKT controls: the voice
+  widget said the words "never leave" the phone, and the spec list called
+  the voice "offline". Both depend on which speech engine and recogniser
+  the user has installed, so both now say exactly that.
+- Words not yet spoken on the demo's alert screen failed AA contrast
+  against the yellow (2.49:1). They sit at 5.06:1 now.
+
+### Added
+- Site plumbing for search and answer engines: canonical link, robots.txt,
+  sitemap.xml, Open Graph and Twitter cards with a locally generated share
+  image, and JSON-LD for the software, the publisher and the FAQ.
+- An FAQ answering the six questions people actually ask before
+  installing: whether the server is required, Play Services, cost, which
+  voice, whether it will wake you, and calendar apps.
+- Accessibility and interface polish: skip link, safe-area padding,
+  balanced heading wrap, tabular timings, touch-action on controls,
+  en-GB locale, and a named form control.
+
 ## [1.1.29]
 
 ### Changed
